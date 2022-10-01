@@ -1,0 +1,63 @@
+.basicButton, .delButton{
+    min-width: 150px;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 5px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.delButton{
+    background-color: darkgray;
+    color: black;
+}
+.delButton:hover{
+    background-color: gray;
+}
+
+.delButton{
+    color: white;
+    background-color: red;
+}
+
+.delButton:hover{
+    background-color: darkred;
+}
+
+.start{
+    justify-content: flex-start !important;
+}
+.end{
+    justify-content: flex-end !important;
+}
+
+.seventy{
+    width:70% !important;
+}
+.thirty{
+    width:30% !important;
+}
+
+.tempHolder{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: min-content;
+    flex-wrap: nowrap;
+    gap: 8px;
+}
+
+input[type="text"], input[type="number"]{
+    width: 150px;
+}
+
+.thirty> .myRow{
+    justify-content: space-between;
+}
+
+.chart{
+    width: 650px;
+}

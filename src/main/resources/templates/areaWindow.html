@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+
+    <link rel="stylesheet" href="css/mainStyle.css">
+    <link rel="stylesheet" href="css/dropdownStyle.css">
+    <link rel="stylesheet" href="css/areaWindowStyle.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<script>
+
+    let needUpdate = true;
+
+
+
+    let currentData;
+
+    let myChart;
+
+
+
+    function updateData(){
+        let curId = $("#curId").html()
+        let dataToSend = "{'id':"+curId+", 'limit':50}"
+
+        fetch("/getTemperature", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataToSend,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    currentData = JSON.parse(data);
+                    console.log(currentData);
+
+                    updatePageStatisticsTemperature()
+                    if(needUpdate){
+                        updatePageStatistics();
+                    }
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    function updatePageStatisticsTemperature(){
+        $(".loading").addClass("hidden");
+
+        $("#curTemperatureLine").removeClass("noData");
+        $("#curTemperatureLine").removeClass("normal");
+        $("#curTemperatureLine").removeClass("warning");
+        $("#curTemperatureLine").removeClass("danger");
+        $("#curTemperatureLine").addClass(currentData["temperatureClass"]);
+
+        $("#curTemperatureMarker").removeClass("noData");
+        $("#curTemperatureMarker").removeClass("normal");
+        $("#curTemperatureMarker").removeClass("warning");
+        $("#curTemperatureMarker").removeClass("danger");
+        $("#curTemperatureMarker").addClass(currentData["temperatureClass"]);
+
+
+        $("#curTemperatureLine").html(currentData["temperature"][0]);
+    }
+    function updatePageStatistics(){
+
+
+        const labels = currentData["time"].reverse();
+
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период" ,
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: currentData["temperature"].reverse(),
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                animation: {
+                    duration: 0
+                }
+            }
+        };
+        if (myChart != null) {
+            myChart.destroy();
+        }
+
+
+        myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+
+    };
+
+
+
+    setInterval(function(){
+
+        updateData();
+
+
+    }, 3000);
+</script>
+<body>
+    <div class="topBar">
+        <div class="buttonsBar">
+            <text id="sysActions">Система</text>
+            <text id="directActions">Управление</text>
+            <text id="userActions">Пользователь</text>
+        </div>
+        <div class="weatherBar">
+            <text>v: <b>5 м/с ЮВ</b></text>
+            <text>φ: <b>78%</b></text>
+            <text>t: <b>24°</b></text>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="myRow noGap">
+            <div class="myColumn seventy">
+                <div class="chart">
+                    <img src="img/loading.gif" class="loading">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="myColumn">
+                    <text style="width: 650px">Настройка графика</text>
+                </div>
+                <div class="myColumn">
+                    <div class="myRow" style="width: 650px;">
+                        <text>C </text>
+                        <text>Число:</text>
+                        <input id="beginDay" type="date">
+                        <text>Время:</text>
+                        <input id="beginTime" type="time">
+                    </div>
+                    <div class="myRow" style="width: 650px;">
+                        <text>ПО </text>
+                        <text>Число:</text>
+                        <input id="endDay" type="date">
+                        <text>Время:</text>
+                        <input id="endTime" type="time">
+                    </div>
+                    <div class="myRow" style="width: 650px;">
+                        <button id="makeChartRequest" class="basicButton" style="width: calc(50% - 10px)">Сформировать график</button>
+                        <button id="beginUpdate" class="basicButton" style="width: calc(50% - 10px)">Возобновить мониторинг</button>
+                    </div>
+                </div>
+            </div>
+            <div class="myColumn thirty">
+                <div class="myRow start"><text id="curId" th:text="${controlObject.id}"></text></div>
+                <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
+                <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
+                <div class="myRow "><text>Повышенная температура, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
+                <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
+                <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.temperatureClass}">42°</b></div></div>
+
+                <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
+                <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
+                <button class="delButton">Удалить</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dropdown system hidden">
+        <a>Проверить связь</a>
+        <a>Перезапустить сканер</a>
+    </div>
+    <div class="dropdown directions hidden">
+        <a href="/main">Главная страница контроля</a>
+        <a href="/newArea">Создать новый объект контроля</a>
+    </div>
+    <div class="dropdown user hidden">
+        <div class="myColumn">
+            <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+            <div class="myRow" style="justify-content: flex-start">
+                <b th:utext="${user.getName}"></b>
+                <b th:utext="${user.getSurname}"></b>
+            </div>
+            <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+            <div class="myRow" th:utext="${user.getRole}">
+                <b th:utext="${user.getRole}"></b>
+            </div>
+        </div>
+        <hr/>
+        <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+        <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+    </div>
+
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+
+    $(".main").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+    });
+
+    $("#sysActions").click(function (){
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".system").toggleClass("hidden");
+    });
+    $(".system").click(function (){
+        $(".system").toggleClass("hidden");
+    });
+
+    $("#directActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".directions").toggleClass("hidden");
+    });
+    $(".directions").click(function (){
+        $(".directions").toggleClass("hidden");
+    });
+
+    $("#userActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").toggleClass("hidden");
+    });
+    $(".user").click(function (){
+        $(".user").toggleClass("hidden");
+    });
+
+    function updateObject(id){
+        if($(".name").val() != "" && $(".dangerTemp").val() != "" && $(".warningTemp").val() != ""){
+            let currentData = "{ \"id\": " + id +"," +
+                "\"name\": \"" + $(".name").val() +"\"," +
+                "\"dangerTemp\": " + $(".dangerTemp").val() +"," +
+                "\"warningTemp\": " + $(".warningTemp").val() +
+                "}";
+
+                console.log(currentData);
+            fetch("/saveArea", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: currentData,
+            })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data);
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        else{
+            alert("Введите значения для всех полей!")
+        }
+
+    }
+
+    $("#makeChartRequest").click(function (){
+        needUpdate = false;
+        let date1 = $("#beginDay").val();
+        let normalDate1 = date1.split("-")[2] + "." + date1.split("-")[1] + "." + date1.split("-")[0]
+
+
+        let date2 = $("#endDay").val();
+        let normalDate2 = date2.split("-")[2] + "." + date2.split("-")[1] + "." + date2.split("-")[0]
+
+
+        let value1 = normalDate1 + "-" +$("#beginTime").val()+":00"
+        let value2 = normalDate2 + "-" +$("#endTime").val()+":00"
+
+
+
+        let dataToSend = {};
+
+        dataToSend["id"] = parseInt($("#curId").html());
+        dataToSend["begin"] = value1;
+        dataToSend["end"] = value2;
+
+        let dataStringToSend = JSON.stringify(dataToSend);
+
+        console.log(dataStringToSend)
+
+        fetch("/getTemperatureInRange", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataStringToSend,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                currentData = JSON.parse(data);
+                console.log(currentData);
+
+
+
+                updatePageStatistics();
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+
+    });
+
+    $("#beginUpdate").click(function (){
+        needUpdate = true;
+
+
+    });
+
+
+</script>
+
+
+
+</html>

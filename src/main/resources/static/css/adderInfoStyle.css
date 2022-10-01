@@ -1,0 +1,10 @@
+.areaInfo>text{
+    max-width: calc(100% - 30px);
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+a.areaInfo, a.areaInfo:hover{
+    text-decoration: none;
+    color: black;
+}

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+
+    <link rel="stylesheet" href="css/mainStyle.css">
+    <link rel="stylesheet" href="css/mainAdder.css">
+    <link rel="stylesheet" href="css/adderInfoStyle.css">
+    <link rel="stylesheet" href="css/chooseObjectWindow.css">
+    <link rel="stylesheet" href="css/dropdownStyle.css">
+</head>
+
+<script>
+    let myJsonString = "[" +
+        "[" +
+        "{\"id\": 1, \"name\": \"Зона 1\", \"temperatureClass\": \"normal\", \"mapX\": 210, \"mapY\": 195}," +
+        "{\"id\": 2, \"name\": \"Зона 2\", \"temperatureClass\": \"normal\", \"mapX\": 180, \"mapY\": 195}," +
+        "{\"id\": 3, \"name\": \"Зона 3\", \"temperatureClass\": \"danger\", \"mapX\": 150, \"mapY\": 195}," +
+        "{\"id\": 4, \"name\": \"Зона 3\", \"temperatureClass\": \"warning\", \"mapX\": null, \"mapY\": null}" +
+        "], " +
+        "[" +
+        "{\"id\": 1, \"name\": \"Зона 1\", \"temperatureClass\": \"normal\", \"mapX\": 210, \"mapY\": 195}," +
+        "{\"id\": 2, \"name\": \"Зона 2\", \"temperatureClass\": \"normal\", \"mapX\": 180, \"mapY\": 195}," +
+        "{\"id\": 3, \"name\": \"Зона 3\", \"temperatureClass\": \"danger\", \"mapX\": 150, \"mapY\": 195}" +
+        "]" +
+        "]";
+    let currentData = JSON.parse(myJsonString);
+    console.log(currentData);
+
+    function updateData(){
+        fetch("/getMapAndListArraysJSON", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                currentData = JSON.parse(data);
+                console.log(currentData);
+
+                redraw();
+            })
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    setInterval(function(){
+        updateData();
+    }, 3000);
+
+    function redraw(){
+        $(".maxSize").empty();
+
+
+        let dataToDisplay = currentData[1];
+        for(let elementId = 0; elementId < dataToDisplay.length; elementId+=1) {
+            $(".maxSize").append("<a class=\"marker " + dataToDisplay[elementId]["temperatureClass"] + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  href=\"/area?id=" + dataToDisplay[elementId]["id"] + "\" >");
+        }
+
+        $(".areaList").empty();
+        let dataToList = currentData[0];
+        for(let elementId = 0; elementId < dataToList.length; elementId+=1) {
+            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\"></div></a>");
+        }
+    }
+</script>
+<body>
+    <div class="topBar">
+        <div class="buttonsBar">
+            <text id="sysActions">Система</text>
+            <text id="directActions">Управление</text>
+            <text id="userActions">Пользователь</text>
+        </div>
+        <div class="weatherBar">
+            <text>v: <b>5 м/с ЮВ</b></text>
+            <text>φ: <b>78%</b></text>
+            <text>t: <b>24°</b></text>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="map">
+
+
+            <div  class="mapImage" th:style="'background-image:url(' + ${src} + ');'">
+                <div class="maxSize" >
+                    <a class="marker" th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="onclick=|getInfo(${controlObjectToDisplay.getId})|, style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="${controlObjectToDisplay.temperatureClass}" th:href="@{/area?id={id}(id=${controlObjectToDisplay.getId})}">
+
+                    </a>
+                </div>
+            </div>
+            <div class="mapActions">
+                <div class="mapActionButton" id="newMarker" title="Добавить маркер на карту">+М</div>
+                <div class="mapActionButton" id="newArea" title="Добавить маркер на карту">+A</div>
+                <div class="mapActionButton" id="upload" title="Сменить подложку">^</div>
+                <div class="mapActionButton" id="help" title="Справка">?</div>
+            </div>
+        </div>
+
+        <div class="list">
+            <div class="myRow" style=" width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b>Участки наблюдения</b></b></div>
+            <div class="myRow areaList" >
+                <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
+                        <text th:utext="${controlObject.name}">Зона 1</text>
+                        <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dropdown system hidden">
+        <a>Проверить связь</a>
+        <a>Перезапустить сканер</a>
+    </div>
+    <div class="dropdown directions hidden">
+        <a href="/main">Главная страница контроля</a>
+        <a href="/newArea">Создать новый объект контроля</a>
+    </div>
+    <div class="dropdown user hidden">
+        <div class="myColumn">
+            <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+            <div class="myRow" style="justify-content: flex-start">
+                <b th:utext="${user.getName}"></b>
+                <b th:utext="${user.getSurname}"></b>
+            </div>
+            <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+            <div class="myRow" th:utext="${user.getRole}">
+                <b th:utext="${user.getRole}"></b>
+            </div>
+        </div>
+        <hr/>
+        <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+        <a href="#" th:href="@{/logout}">Log Out</a>
+    </div>
+
+    <div class="uploadWindow myColumn hidden">
+        <div class="cross">X</div>
+        <div class="uploadInfo">Новая подложка</div>
+        <form class="myRow" action="setNewMap" method="POST" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/png"/>
+            <input type="submit" name="setNewButton">
+        </form>
+        <div class="myRow center">
+            Принимаются изображения только в <b>png</b> формате
+        </div>
+    </div>
+
+    <div class="myColumn chooseObjectWindow hidden">
+        <div class="myRow reversed">
+            <div id="closeObjectWindow">X</div>
+        </div>
+        <div class="myRow" style="height: min-content; margin: 0;">
+            <h4 style="height: min-content; margin: 0;">Выберите объект контроля</h4>
+        </div>
+        <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:id="${controlObject.id}">
+            <text th:utext="${controlObject.name}"></text>
+            <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
+        </div>
+    </div>
+</body>
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+
+    $(".main").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+    });
+
+    $("#sysActions").click(function (){
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".system").toggleClass("hidden");
+    });
+    $(".system").click(function (){
+        $(".system").toggleClass("hidden");
+    });
+
+    $("#directActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".directions").toggleClass("hidden");
+    });
+    $(".directions").click(function (){
+        $(".directions").toggleClass("hidden");
+    });
+
+    $("#userActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").toggleClass("hidden");
+    });
+    $(".user").click(function (){
+        $(".user").toggleClass("hidden");
+    });
+
+
+    let offset = $(".mapImage").offset();
+
+    let preparedToAddElementId = null;
+
+    let readyToAddNew = 0;
+
+
+    $(document).click(function (e){
+        console.log("document click")
+        console.log(readyToAddNew)
+        if (readyToAddNew == 1){
+            if(e.pageX > offset.left && e.pageX < offset.left + 800 && e.pageY > offset.top && e.pageY < offset.top + 600){
+                newX = e.pageX - offset.left - 11;
+                newY = e.pageY - offset.top - 11
+                fetch("/changeCoordinates", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: "{\"x\": "+newX+", \"y\": "+newY+", \"id\":"+preparedToAddElementId+"}",
+                })
+                .then((response) => {
+                    response.text().then(function (){
+                        updateData();
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+                preparedToAddElementId = null;
+            }
+
+        }
+        readyToAddNew -= 1;
+        if(readyToAddNew < 0){
+            readyToAddNew = 0;
+        }
+        console.log(readyToAddNew);
+    });
+
+    $("#newMarker").click(function (){
+
+        console.log("Ready to add")
+        $(".chooseObjectWindow").removeClass("hidden");
+        $(".chooseObjectWindow>.areaInfo").each(function (){
+            $(this).click(function (){
+                preparedToAddElementId = $(this).attr('id');
+                console.log("magic: "+ preparedToAddElementId);
+                $(".chooseObjectWindow").addClass("hidden");
+                readyToAddNew = 2;
+            });
+        });
+    });
+
+    $("#upload").click(function (){
+        console.log('showed');
+        $(".uploadWindow").removeClass("hidden");
+    });
+
+    $(".cross").click(function (){
+        console.log('closed');
+        $(".uploadWindow").addClass("hidden");
+    });
+</script>
+
+</html>
