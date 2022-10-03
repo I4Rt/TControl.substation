@@ -36,20 +36,25 @@ public class AreaPageRestController {
             System.out.println(data.getString("name"));
             System.out.println(data.getDouble("warningTemp"));
             System.out.println(data.getDouble("dangerTemp"));
-            ControlObject controlObject = new ControlObject();
-            controlObject.setTemperatureClass("noData");
+
+            ControlObject curControlObject = new ControlObject();
+            curControlObject.setTemperatureClass("noData");
 
             if(!(controlObjectRepo.findById(data.getLong("id")).isEmpty())){
-                controlObject = controlObjectRepo.getById(data.getLong("id"));
+                curControlObject = controlObjectRepo.getById(data.getLong("id"));
             }
 
 
-            controlObject.setName(data.getString("name"));
-            controlObject.setWarningTemp(data.getDouble("warningTemp"));
-            controlObject.setDangerTemp(data.getDouble("dangerTemp"));
+            curControlObject.setName(data.getString("name"));
+            curControlObject.setWarningTemp(data.getDouble("warningTemp"));
+            curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
+
+            System.out.println("dt: " + curControlObject.getDangerTemp());
 
 
-            controlObjectRepo.save(controlObject);
+            controlObjectRepo.save(curControlObject);
+            curControlObject = controlObjectRepo.getById(data.getLong("id"));
+            System.out.println("dt after: " + curControlObject.getDangerTemp());
         }
         catch (Exception e){
             System.out.println(e);
@@ -78,6 +83,8 @@ public class AreaPageRestController {
         }
 
         String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
+
+        System.out.println("temp_data: " + jsonStringToSend);
 
         return jsonStringToSend;
     }

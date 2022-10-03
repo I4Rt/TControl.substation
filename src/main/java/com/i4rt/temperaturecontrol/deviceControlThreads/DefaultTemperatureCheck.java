@@ -73,6 +73,8 @@ public class DefaultTemperatureCheck extends Thread{
                 List<ControlObject> curControlObjects = thermalImagers.get(i).getControlObjectsArray();
 
                 for (ControlObject co : curControlObjects){
+                    System.out.println("Мониторю " + co.getName());
+
                     user = userRepo.getUserThatGrabbedThermalImager();;
                     if(user != null){
                         System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
@@ -80,27 +82,48 @@ public class DefaultTemperatureCheck extends Thread{
                         continue;
                     }
 
-                    Double curTemperature = thermalImagers.get(i).getTemperature(co.getHorizontal(), co.getVertical(), co.getX(), co.getMapY(), co.getFocusing());
-                    Measurement newData = new Measurement();
+                    thermalImagers.get(i).gotoCoordinates(co.getHorizontal(), co.getVertical(), co.getFocusing());
 
-                    newData.setTemperature(curTemperature);
+                    String configureResult = thermalImagers.get(i).configureArea(co.getX(), co.getY(), co.getX() + co.getAreaWidth(), co.getY() + co.getAreaHeight());
 
-                    newData.setDatetime(new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").format(Calendar.getInstance().getTime()));
+                    if(configureResult.equals("ok")){
 
-                    co.addMeasurement(newData);
-                    newData.setControlObject(co);
+                        //focussing
 
-                    measurementRepo.save(newData);
+                        Double curTemperature = (Double) thermalImagers.get(i).getTemperatureInArea(1);
 
-                    co.updateTemperatureClass(curTemperature);
+                        if(curTemperature != null){
+                            Measurement newData = new Measurement();
 
-                    controlObjectRepo.save(co);
+                            newData.setTemperature(curTemperature);
 
-                    Thread.sleep(5000);
+                            newData.setDatetime(new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").format(Calendar.getInstance().getTime()));
+
+                            co.addMeasurement(newData);
+                            newData.setControlObject(co);
+
+                            measurementRepo.save(newData);
+
+                            co.updateTemperatureClass(curTemperature);
+
+                            controlObjectRepo.save(co);
+
+                        }
+                        else{
+                            System.out.println("Getting temperature error");
+                        }
+
+                    }
+                    else {
+                        System.out.println("Configuring area error");
+                    }
+                    //Thread.sleep(5000);
                 }
 
 
             }
+
+
 
 
         }
