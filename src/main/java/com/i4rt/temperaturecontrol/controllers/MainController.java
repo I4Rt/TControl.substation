@@ -138,7 +138,7 @@ public class MainController {
         ControlObject controlObject =  new ControlObject();
         System.out.println(controlObjectRepo.getLastObjectId());
 
-        controlObject.setId(controlObjectRepo.getLastObjectId() + 1);
+
 
         model.addAttribute("controlObject", controlObject);
         model.addAttribute("coordinatesString",  "");

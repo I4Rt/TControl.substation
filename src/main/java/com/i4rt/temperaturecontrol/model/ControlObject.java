@@ -2,7 +2,10 @@ package com.i4rt.temperaturecontrol.model;
 
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import lombok.*;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.Proxy;
 import org.json.JSONObject;
+
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -14,7 +17,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ControlObject {
+@Proxy(lazy = false)
+public class ControlObject implements Comparable<ControlObject>{
     @Id
     @Column(name = "object_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,13 +28,13 @@ public class ControlObject {
     private String name;
 
 
-    @OneToMany(mappedBy = "controlObject", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "controlObject", fetch = FetchType.EAGER)
     private List<Measurement> measurement;
 
     @Column
     private String temperatureClass;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "thermal_imager_id", nullable=true)
     private ThermalImager thermalImager;
 
@@ -76,6 +80,8 @@ public class ControlObject {
         else{
             temperatureClass = "danger";
         }
+
+        System.out.println("temperature class of " + name + " is " + temperatureClass);
     }
 
 
@@ -125,5 +131,10 @@ public class ControlObject {
         }
         return "Не заданы";
 
+    }
+
+    @Override
+    public int compareTo(ControlObject o) {
+        return this.getId().compareTo(o.getId());
     }
 }

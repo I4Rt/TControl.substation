@@ -1,9 +1,6 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
-import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
+import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.User;
@@ -26,12 +23,15 @@ public class AddingPageRestController {
     private final ThermalImagerRepo thermalImagerRepo;
     @Autowired
     private final UserRepo userRepo;
+    @Autowired
+    private final WeatherMeasurementRepo weatherMeasurementRepo;
 
-    public AddingPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public AddingPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
+        this.weatherMeasurementRepo = weatherMeasurementRepo;
     }
 
     @RequestMapping(value = "getCoordinatesById", method = RequestMethod.POST)
@@ -129,4 +129,7 @@ public class AddingPageRestController {
         curUser.setThermalImagerGrabbed(false);
         userRepo.save(curUser);
     }
+
+
+
 }

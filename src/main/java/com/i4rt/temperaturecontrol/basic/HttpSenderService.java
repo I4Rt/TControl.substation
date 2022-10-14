@@ -46,7 +46,9 @@ public class HttpSenderService {
 
     public static HttpSenderService instance;
 
-    final HttpHost targetHost = new HttpHost("192.168.1.64", 80, "http");
+
+
+    private HttpHost targetHost = new HttpHost("192.168.1.64", 80, "http");
     final BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
     final BasicAuthCache authCache = new BasicAuthCache();
     // Add AuthCache to the execution context
@@ -73,6 +75,15 @@ public class HttpSenderService {
         if(instance == null){
             instance = new HttpSenderService();
         }
+        return instance;
+    }
+
+    public static HttpSenderService setInstance(String IP, Integer port){
+        if(instance == null){
+            instance = new HttpSenderService();
+        }
+
+        instance.targetHost = new HttpHost(IP, port, "http");
         return instance;
     }
 

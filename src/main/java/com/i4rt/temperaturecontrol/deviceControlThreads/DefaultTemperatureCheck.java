@@ -78,7 +78,7 @@ public class DefaultTemperatureCheck extends Thread{
                     user = userRepo.getUserThatGrabbedThermalImager();;
                     if(user != null){
                         System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
-                        Thread.sleep(1000);
+
                         continue;
                     }
 

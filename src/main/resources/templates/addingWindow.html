@@ -21,9 +21,8 @@
             <text id="userActions">Пользователь</text>
         </div>
         <div class="weatherBar">
-            <text>v: <b>5 м/с ЮВ</b></text>
-            <text>φ: <b>78%</b></text>
-            <text>t: <b>24°</b></text>
+            <text>Обновление</text>
+            <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
         </div>
     </div>
 
@@ -59,9 +58,9 @@
                     </div>
                     <div class="thermalCameraInfoHolder">
                         <div class="step"><text>Шаг переноса:</text> <input id="step" type="text" value="5.0"></div>
-                        <div class="declination"><text>Горизонтальное склонение:</text> <input th:value="${horizontal}" id="horizontal" type="text" value="32.0"></div>
-                        <div class="declination"><text>Вертикальное склонение:</text> <input th:value="${vertical}" id="vertical" type="text" value="11.0"></div>
-                        <div class="focusing"><text>Фокусировка:</text> <input type="text" th:value="${focusing}" id="focusing"></div>
+                        <div class="declination"><text>Горизонтальное склонение:</text> <input class="change" th:value="${horizontal}" id="horizontal" type="text" value="32.0"></div>
+                        <div class="declination"><text>Вертикальное склонение:</text> <input class="change" th:value="${vertical}" id="vertical" type="text" value="11.0"></div>
+                        <div class="focusing"><text>Фокусировка:</text> <input class="change" type="text" th:value="${focusing}" id="focusing"></div>
                     </div>
                 </div>
             </div>
@@ -118,6 +117,53 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
+    let busy = false;
+    let waiting = false;
+    let last_command = 0;
+
+    function wait_command(command){
+        waiting = true;
+        console.log("command " + command)
+        console.log("last command " + last_command)
+        console.log("busy " + busy)
+        setTimeout(
+            function (){
+                if(command != last_command || busy == true){
+                    console.log("continue waiting");
+                    wait_command(last_command);
+                }
+                else{
+                    moveAndView()
+                    waiting = false;
+                }
+            },
+            500
+        );
+    }
+
+
+
+    function updateWeather(){
+        fetch("/getWeather", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    $(".weatherBar").html(data)
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    setInterval(function(){
+        updateWeather();
+    }, 3000);
 
     let currentChanging;
     let currentData;
@@ -325,6 +371,9 @@
 
 
     function moveAndView(){
+        
+        busy = true;
+        console.log("setting busy to " + busy )
         let bodyToGoto = {};
         bodyToGoto["tiId"] = 1
         bodyToGoto["horizontal"] = parseFloat($('#horizontal').val())
@@ -343,50 +392,69 @@
         })
         .then((response) => {
             response.text().then(function (data){
+
                 currentData = JSON.parse(data);
                 console.log(currentData);
 
-                if(currentData["focusing"] != null){
-                    $("#focusing").val(currentData["focusing"]);
-                }
-                if(currentData["horizontal"] != null) {
-                    $("#horizontal").val(currentData["horizontal"]);
-                }
-                if(currentData["vertical"] != null) {
-                    $("#vertical").val(currentData["vertical"]);
-                }
+                // if(currentData["focusing"] != null){
+                //     $("#focusing").val(currentData["focusing"]);
+                // }
+                // if(currentData["horizontal"] != null) {
+                //     $("#horizontal").val(currentData["horizontal"]);
+                // }
+                // if(currentData["vertical"] != null) {
+                //     $("#vertical").val(currentData["vertical"]);
+                // }
                 $(".gotImg").attr("src", currentData["newUrl"]);;
                 console.log(currentData["newUrl"])
 
                 $(".sector").remove();
+
+                busy = false;
+                console.log("setting busy to " + busy )
             });
         })
         .catch((error) => {
             console.error('Error:', error);
+            busy = false;
+            console.log("setting busy to " + busy )
         })
     }
 
-    $('input').each( function (){
+    $('.change').each( function (){
        $(this).change(function (){
-           moveAndView();
+           last_command += 1;
+           if(waiting == false){
+               console.log('begin waiting');
+               wait_command(last_command);
+           }
        });
     });
 
 
     $('.up').click(function (){
+        last_command += 1;
         console.log("up");
 
         $("#vertical").val(parseFloat($("#vertical").val()) + parseFloat($("#step").val()));
-        moveAndView();
+        if(waiting == false){
+            console.log('begin waiting');
+               wait_command(last_command);
+        }
 
 
     })
     $('.down').click(function (){
+        last_command += 1;
         console.log("down");
         $("#vertical").val(parseFloat($("#vertical").val()) - parseFloat($("#step").val()));
-        moveAndView();
+        if(waiting == false){
+            console.log('begin waiting');
+               wait_command(last_command);
+        }
     })
     $('.left').click(function (){
+        last_command += 1;
         console.log("left");
 
         let newVal = parseFloat($("#horizontal").val()) - parseFloat($("#step").val())
@@ -398,9 +466,13 @@
         }
 
         $("#horizontal").val(newVal);
-        moveAndView();
+        if(waiting == false){
+            console.log('begin waiting');
+               wait_command(last_command);
+        }
     })
     $('.right').click(function (){
+        last_command += 1;
         console.log("right");
 
         let newVal = parseFloat($("#horizontal").val()) + parseFloat($("#step").val())
@@ -412,7 +484,10 @@
         }
 
         $("#horizontal").val(newVal);
-        moveAndView();
+        if(waiting == false){
+            console.log('begin waiting');
+               wait_command(last_command);
+        }
     });
 
     $('#logout').click(function (){

@@ -1,11 +1,11 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
-import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
-import com.i4rt.temperaturecontrol.deviceControlThreads.DefaultTemperatureCheck;
+import com.i4rt.temperaturecontrol.databaseInterfaces.*;
+import com.i4rt.temperaturecontrol.device.ThermalImager;
+import com.i4rt.temperaturecontrol.deviceControlThreads.ThermalImagersMainControlThread;
+import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThread;
 import com.i4rt.temperaturecontrol.model.ControlObject;
+import com.i4rt.temperaturecontrol.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,24 +22,33 @@ public class MainPageRestHolder {
     private final ThermalImagerRepo thermalImagerRepo;
     @Autowired
     private final UserRepo userRepo;
+    @Autowired
+    private final WeatherMeasurementRepo weatherMeasurementRepo;
 
-    public MainPageRestHolder(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public MainPageRestHolder(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
 
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
+        this.weatherMeasurementRepo = weatherMeasurementRepo;
 
-        DefaultTemperatureCheck.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo);
+        ThermalImagersMainControlThread.setInstance(this.controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo);
 
-        DefaultTemperatureCheck dtcThread = DefaultTemperatureCheck.getInstance();
+        ThermalImagersMainControlThread thermalImagersMainControlThread = ThermalImagersMainControlThread.getInstance();
 
-        dtcThread.start();
+        thermalImagersMainControlThread.start();
+
+        WeatherStationControlThread weatherStationControlThread = new WeatherStationControlThread(weatherMeasurementRepo);
+
+        weatherStationControlThread.start();
+
     }
 
     //{'id': id:Long, 'x': x:Integer, 'y': y:Integer, }
     @RequestMapping(value = "changeCoordinates", method = RequestMethod.POST)
     public void changeCoordinates(@RequestBody String jsonData){
+        System.out.println("coordinate change");
         org.json.JSONObject data = new org.json.JSONObject(jsonData);
 
         ControlObject controlObject = controlObjectRepo.getById(data.getLong("id"));

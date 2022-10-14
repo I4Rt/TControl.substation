@@ -13,10 +13,9 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>TemperatureControl</name>
     <description>TemperatureControl</description>
-    <properties>
-        <java.version>17</java.version>
-    </properties>
+
     <dependencies>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -101,6 +100,7 @@
             <artifactId>gax</artifactId>
             <version>1.57.0</version>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -115,6 +115,14 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
         </plugins>

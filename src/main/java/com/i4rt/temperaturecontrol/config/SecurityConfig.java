@@ -27,8 +27,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(HttpSecurity http) throws Exception{
         http.authorizeHttpRequests((requests) -> requests
+
                 .antMatchers("/adding", "/saveArea", "/register", "/registerUser").hasAnyAuthority("ADMIN")
-                .anyRequest().permitAll()
+                .antMatchers("/main", "/saveArea", "/area", "/adding").authenticated()
+                .anyRequest().authenticated()
             )
             .formLogin((form) -> form
                 .loginPage("/login").passwordParameter("password").usernameParameter("login")
