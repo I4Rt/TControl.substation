@@ -92,7 +92,7 @@ public class AreaPageRestController {
         preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
 
         for(Measurement measurement: curMeasurements){
-            ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime());
+            ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
             ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
         }
 
@@ -101,9 +101,7 @@ public class AreaPageRestController {
         System.out.println("temp_data: " + jsonStringToSend);
 
         return jsonStringToSend;
-    }
-
-    @RequestMapping(value="getWeatherTemperature",method = RequestMethod.POST)
+    }@RequestMapping(value="getWeatherTemperature",method = RequestMethod.POST)
     public String getTemperatureWeatherMeasurementJsonString(@RequestBody String dataJson){
         JSONObject data = new JSONObject(dataJson);
 
@@ -112,20 +110,13 @@ public class AreaPageRestController {
         String begin = data.getString("begin");
         String end = data.getString("end");
 
-        List<WeatherMeasurement> curWeatherMeasurements = weatherMeasurementRepo.findAll();
         try {
-            Date beginningDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(begin);
-            Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
+            Date beginningDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(begin);
+            Date endingDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(end);
 
-            List<WeatherMeasurement> results = new ArrayList<>();
+            List<WeatherMeasurement> results = weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate);
 
-            for(WeatherMeasurement weatherMeasurement: curWeatherMeasurements){
-                Date curDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(weatherMeasurement.getDateTime());
-
-                if(curDate.before(endingDate) && curDate.after(beginningDate)){
-                    results.add(weatherMeasurement);
-                }
-            }
+            System.out.println("Weather " + results);
 
             Map<String, Object> preparedToSendData = new HashMap<>();
 
@@ -135,7 +126,7 @@ public class AreaPageRestController {
 
             for(WeatherMeasurement weatherMeasurement: results){
                 //System.out.println(weatherMeasurement.getId());
-                ((ArrayList<String>)preparedToSendData.get("time")).add(weatherMeasurement.getDateTime());
+                ((ArrayList<String>)preparedToSendData.get("time")).add(weatherMeasurement.getDateTime().toString());
 
                 ((ArrayList<Double>)preparedToSendData.get("weatherTemperature")).add(weatherMeasurement.getTemperature());
             }
@@ -157,39 +148,31 @@ public class AreaPageRestController {
         Long searchControlObjectId = data.getLong("id");
         String begin = data.getString("begin");
         String end = data.getString("end");
-        List<Measurement> results = new ArrayList<>();
+
         try {
             Date beginningDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(begin);
             Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
 
+            List<Measurement> results = measurementRepo.getMeasurementByDatetimeInRange(searchControlObjectId, beginningDate, endingDate);
 
 
-            List<Measurement> curMeasurements = measurementRepo.getMeasurementByAreaId(searchControlObjectId);
+            Map<String, Object> preparedToSendData = new HashMap<>();
 
-            for(Measurement m : curMeasurements){
-                Date curDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(m.getDatetime());
+            preparedToSendData.put("time", new ArrayList<String>());
+            preparedToSendData.put("temperature", new ArrayList<Double>());
+            preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
 
-                if(curDate.before(endingDate) && curDate.after(beginningDate)){
-                    results.add(m);
-                }
+            for(Measurement measurement: results){
+                ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
+                ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
             }
+
+            String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
+            return jsonStringToSend;
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        Map<String, Object> preparedToSendData = new HashMap<>();
-
-        preparedToSendData.put("time", new ArrayList<String>());
-        preparedToSendData.put("temperature", new ArrayList<Double>());
-        preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
-
-        for(Measurement measurement: results){
-            ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime());
-            ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
-        }
-
-        String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
-
-        return jsonStringToSend;
+        return "error";
     }
 
     @RequestMapping(value = "deleteArea", method = RequestMethod.POST)

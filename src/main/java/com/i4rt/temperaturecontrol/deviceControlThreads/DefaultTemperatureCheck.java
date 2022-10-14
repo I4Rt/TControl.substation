@@ -97,7 +97,7 @@ public class DefaultTemperatureCheck extends Thread{
 
                             newData.setTemperature(curTemperature);
 
-                            newData.setDatetime(new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").format(Calendar.getInstance().getTime()));
+                            newData.setDatetime(Calendar.getInstance().getTime());
 
                             co.addMeasurement(newData);
                             newData.setControlObject(co);

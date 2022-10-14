@@ -3,6 +3,7 @@ package com.i4rt.temperaturecontrol.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Setter
@@ -23,5 +24,5 @@ public class Measurement {
     private Double temperature;
 
     @Column(nullable = false)
-    private String datetime;
+    private Date datetime;
 }

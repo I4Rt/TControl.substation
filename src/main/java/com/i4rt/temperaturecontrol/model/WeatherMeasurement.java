@@ -3,6 +3,7 @@ package com.i4rt.temperaturecontrol.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Setter
@@ -31,6 +32,6 @@ public class WeatherMeasurement {
     @Column
     private Double rainfall;
 
-    @Column
-    private String dateTime;
+    @Column(name = "datetime")
+    private Date dateTime;
 }

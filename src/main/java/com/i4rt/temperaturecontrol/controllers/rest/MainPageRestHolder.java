@@ -6,9 +6,12 @@ import com.i4rt.temperaturecontrol.deviceControlThreads.ThermalImagersMainContro
 import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThread;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.User;
+import com.i4rt.temperaturecontrol.tasks.DeleteCreateFolderTask;
+import com.i4rt.temperaturecontrol.tasks.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Calendar;
 import java.util.List;
 
 
@@ -43,6 +46,12 @@ public class MainPageRestHolder {
 
         weatherStationControlThread.start();
 
+        Calendar prevCalendar = Calendar.getInstance();
+        prevCalendar.add(Calendar.DAY_OF_MONTH, -15);
+
+        System.out.println(prevCalendar);
+        Executor ex = new Executor(0,0,0, new DeleteCreateFolderTask(), "daily");
+        ex.start();
     }
 
     //{'id': id:Long, 'x': x:Integer, 'y': y:Integer, }

@@ -63,7 +63,8 @@
                 .then((response) => {
                     response.text().then(function (data){
                         weatherCurrentData = JSON.parse(data);
-                        console.log("Weather " + weatherCurrentData);
+                        console.log("Weather")
+                        console.log(weatherCurrentData);
 
 
 
@@ -123,11 +124,12 @@
 
         let totalLabels = labels
 
-        for(let i; i < weatherLabels.length; i++){
-            if(! totalLabels.includes(weatherLabels[i])){
-                totalLabels.push(weatherLabels[i]);
+        for(let k; k < weatherLabels.length; k++){
+            if(! totalLabels.includes(weatherLabels[k])){
+                totalLabels.push(weatherLabels[k]);
             }
         }
+        console.log("total size: " + totalLabels.length)
 
 
 
@@ -165,7 +167,9 @@
         }
         console.log("array size: " + totalLabels.length)
         console.log("data1 " + insideData1.length)
+        console.log(insideData1)
         console.log("data2 " + insideData2.length)
+        console.log(insideData2)
 
 
 
@@ -279,7 +283,7 @@
                     <text style="width: 650px">Отображения</text>
                 </div>
                 <div class="myColumn">
-                    <div class="myRow" style="width: 650px;">
+                    <div class="myRow" style="width: 650px; justify-content: flex-start">
                         <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
                         <button class="basicButton" style="width: fit-content; font-size: 16px">Нагрузки</button>
                     </div>

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Date;
+
 @Repository
 public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
 
@@ -17,7 +19,7 @@ public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
     ArrayList<Measurement> getMeasurementByDatetime(@Param("searchId") Long searchId, @Param("limit") Integer limit);
 
     @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId and datetime >= :begin and datetime <= :end order by measurement_id desc")
-    ArrayList<Measurement> getMeasurementByDatetimeInRange(@Param("searchId") Long searchId, @Param("begin") String begin, @Param("end") String end);
+    ArrayList<Measurement> getMeasurementByDatetimeInRange(@Param("searchId") Long searchId, @Param("begin") Date begin, @Param("end") Date end);
 
 
     @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId order by measurement_id desc")

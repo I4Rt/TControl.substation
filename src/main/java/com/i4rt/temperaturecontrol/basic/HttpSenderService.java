@@ -160,6 +160,8 @@ public class HttpSenderService {
         //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
         HttpEntity entity = response.getEntity();
+        File prev_file = new File(location, "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg");
+        prev_file.delete();
 
         File file = new File(location, "got_pic"+ GotPicImageCounter.increaseCounter() +".jpg");
         file.getParentFile().mkdirs();
@@ -173,6 +175,30 @@ public class HttpSenderService {
         httpClient.close();
         httpClient = HttpClients.createDefault();
         return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
+    }
+
+    public String saveImage(String location, String request, String name) throws IOException {
+        //"/ISAPI/Streaming/channels/2/picture"
+        HttpGet httpget = new HttpGet(request);
+
+        CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
+        //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
+
+        HttpEntity entity = response.getEntity();
+
+
+        File file = new File(location,  name +".jpg");
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+        FileOutputStream fileOS  = new FileOutputStream(file);
+        entity.writeTo(fileOS);
+        entity.consumeContent();
+        fileOS.flush();
+        fileOS.close();
+
+        httpClient.close();
+        httpClient = HttpClients.createDefault();
+        return name +".jpg";
     }
 
 }

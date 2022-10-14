@@ -15,10 +15,8 @@ import javax.persistence.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.time.Instant;
+import java.util.*;
 
 @Entity
 @Setter
@@ -113,27 +111,48 @@ public class ThermalImager {
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
 
+                    Integer focusingCounter = 0;
+                    while(true){
+                        focusingCounter += 1;
+                        String focusingBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                                "<PTZAbsoluteEx xmlns=\"http://www.isapi.org/ver20/XMLSchema\" version=\"2.0\">\n" +
+                                "    <elevation>" + vertical / 10 + "</elevation>\n" +
+                                "    <azimuth>" + horizontal / 10 + "</azimuth>\n" +
+                                "    <absoluteZoom>1.00</absoluteZoom>\n" +
+                                "    <focus>" + focusing.intValue() + "</focus>\n" +
+                                "    <focalLen>10000</focalLen>\n" +
+                                "    <horizontalSpeed>10.00</horizontalSpeed>\n" +
+                                "    <verticalSpeed>10.00</verticalSpeed>\n" +
+                                "    <zoomType>absoluteZoom</zoomType>\n" +
+                                "    <objectDistance>1</objectDistance>\n" +
+                                "    <isContinuousTrackingEnabled>true</isContinuousTrackingEnabled>\n" +
+                                "    <lookDownUpAngle>0.00</lookDownUpAngle>\n" +
+                                "</PTZAbsoluteEx>";
+                        System.out.println("focusing");
+                        System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
-                    String focusingBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                            "<PTZAbsoluteEx xmlns=\"http://www.isapi.org/ver20/XMLSchema\" version=\"2.0\">\n" +
-                            "    <elevation>" + vertical / 10 + "</elevation>\n" +
-                            "    <azimuth>" + horizontal / 10 + "</azimuth>\n" +
-                            "    <absoluteZoom>1.00</absoluteZoom>\n" +
-                            "    <focus>" + focusing.intValue() + "</focus>\n" +
-                            "    <focalLen>10000</focalLen>\n" +
-                            "    <horizontalSpeed>10.00</horizontalSpeed>\n" +
-                            "    <verticalSpeed>10.00</verticalSpeed>\n" +
-                            "    <zoomType>absoluteZoom</zoomType>\n" +
-                            "    <objectDistance>1</objectDistance>\n" +
-                            "    <isContinuousTrackingEnabled>true</isContinuousTrackingEnabled>\n" +
-                            "    <lookDownUpAngle>0.00</lookDownUpAngle>\n" +
-                            "</PTZAbsoluteEx>";
-                    System.out.println("focusing");
-                    System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
+
+                        answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
+
+                        parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                    Thread.sleep(1500);
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20)){
+                            Thread.sleep(200);
 
+                            System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
+                            System.out.println("need focus " + focusing.intValue());
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
+                        }
+                        else{
+                            System.out.println("focused");
+                            break;
+                        }
+
+                        if(focusingCounter > 50){
+                            return false;
+                        }
+                    }
 
                     return true;
                 }
@@ -193,26 +212,44 @@ public class ThermalImager {
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
 
+                    while(true){
 
-                    String focusingBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                            "<PTZAbsoluteEx xmlns=\"http://www.isapi.org/ver20/XMLSchema\" version=\"2.0\">\n" +
-                            "    <elevation>" + vertical / 10 + "</elevation>\n" +
-                            "    <azimuth>" + horizontal / 10 + "</azimuth>\n" +
-                            "    <absoluteZoom>1.00</absoluteZoom>\n" +
-                            "    <focus>" + focusing.intValue() + "</focus>\n" +
-                            "    <focalLen>10000</focalLen>\n" +
-                            "    <horizontalSpeed>10.00</horizontalSpeed>\n" +
-                            "    <verticalSpeed>10.00</verticalSpeed>\n" +
-                            "    <zoomType>absoluteZoom</zoomType>\n" +
-                            "    <objectDistance>1</objectDistance>\n" +
-                            "    <isContinuousTrackingEnabled>true</isContinuousTrackingEnabled>\n" +
-                            "    <lookDownUpAngle>0.00</lookDownUpAngle>\n" +
-                            "</PTZAbsoluteEx>";
-                    System.out.println("focusing");
-                    System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
+                        String focusingBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                                "<PTZAbsoluteEx xmlns=\"http://www.isapi.org/ver20/XMLSchema\" version=\"2.0\">\n" +
+                                "    <elevation>" + vertical / 10 + "</elevation>\n" +
+                                "    <azimuth>" + horizontal / 10 + "</azimuth>\n" +
+                                "    <absoluteZoom>1.00</absoluteZoom>\n" +
+                                "    <focus>" + focusing.intValue() + "</focus>\n" +
+                                "    <focalLen>10000</focalLen>\n" +
+                                "    <horizontalSpeed>10.00</horizontalSpeed>\n" +
+                                "    <verticalSpeed>10.00</verticalSpeed>\n" +
+                                "    <zoomType>absoluteZoom</zoomType>\n" +
+                                "    <objectDistance>1</objectDistance>\n" +
+                                "    <isContinuousTrackingEnabled>true</isContinuousTrackingEnabled>\n" +
+                                "    <lookDownUpAngle>0.00</lookDownUpAngle>\n" +
+                                "</PTZAbsoluteEx>";
+                        System.out.println("focusing");
+                        System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
 
-                    Thread.sleep(1500);
+                        answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
+
+                        parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
+
+
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20)){
+                            Thread.sleep(200);
+
+                            System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
+                            System.out.println("need focus " + focusing.intValue());
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
+                        }
+                        else{
+                            System.out.println("focused");
+                            break;
+                        }
+                    }
+
 
 
                     String presetBody = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -253,7 +290,7 @@ public class ThermalImager {
         try {
             HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
             
-            Boolean gotoResult = gotoCoordinates(horizontal, vertical, focusing);
+            Boolean gotoResult = gotoCoordinatesNoConfig(horizontal, vertical, focusing);
             System.out.println(gotoResult);
             if(gotoResult){
                 // получить новое фото и сохранить его с новым индексом
@@ -264,6 +301,27 @@ public class ThermalImager {
             e.printStackTrace();
         }
         System.out.println("gotoAndGetImage Error");
+        return "error";
+    }
+
+    public String gotoAndSaveImage(Double horizontal, Double vertical, Double focusing, String areaName){
+        try {
+            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+
+            Boolean gotoResult = gotoCoordinates(horizontal, vertical, focusing);
+            System.out.println(gotoResult);
+
+
+            if(gotoResult){
+                // получить новое фото и сохранить его с новым индексом
+                Calendar calendar = Calendar.getInstance();
+                httpSenderService.saveImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + calendar.get(Calendar.DAY_OF_MONTH) +"_"+ (calendar.get(Calendar.MONTH) + 1) + "\\" + areaName, "/ISAPI/Streaming/channels/2/picture", calendar.get(Calendar.HOUR_OF_DAY) + "_" + calendar.get(Calendar.MINUTE) + "_" +calendar.get(Calendar.SECOND));
+                return "ok"; //!
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("gotoAndSaveImage Error");
         return "error";
     }
 

@@ -104,7 +104,7 @@ public class TITemperatureCheckThread extends Thread{
                 System.out.println("Checking " + co.getName());
                 if(co.getHorizontal() != null && co.getVertical() != null && co.getFocusing() != null){
                     System.out.println("Begin move to coordinates");
-                    thermalImager.gotoCoordinates(co.getHorizontal(), co.getVertical(), co.getFocusing());
+                    thermalImager.gotoAndSaveImage(co.getHorizontal(), co.getVertical(), co.getFocusing(), co.getName());
                     System.out.println("Moved to coordinates");
 
                     if(co.getX() != null && co.getY() != null && co.getAreaWidth() != null && co.getAreaHeight() != null){
@@ -121,12 +121,10 @@ public class TITemperatureCheckThread extends Thread{
 
                                 newData.setTemperature(curTemperature);
 
-                                newData.setDatetime(new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").format(Calendar.getInstance().getTime()));
+                                newData.setDatetime(Calendar.getInstance().getTime());
 
                                 co.addMeasurement(newData);
                                 newData.setControlObject(co);
-
-
 
 
                                 ControlObject coToSave = controlObjectRepo.getById(co.getId());
