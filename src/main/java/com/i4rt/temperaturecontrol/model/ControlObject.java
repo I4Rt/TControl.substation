@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 
 import javax.persistence.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +80,9 @@ public class ControlObject implements Comparable<ControlObject>{
         }
         else{
             temperatureClass = "danger";
+
+
+
         }
 
         System.out.println("temperature class of " + name + " is " + temperatureClass);

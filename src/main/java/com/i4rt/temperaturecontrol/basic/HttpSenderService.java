@@ -1,27 +1,17 @@
 package com.i4rt.temperaturecontrol.basic;
 
 import java.io.*;
-import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.api.gax.core.CredentialsProvider;
 import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.StringEntity;
@@ -31,14 +21,10 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import javax.swing.text.html.parser.Entity;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -55,6 +41,10 @@ public class HttpSenderService {
     final HttpClientContext context = HttpClientContext.create();
     CloseableHttpClient httpClient = HttpClients.createDefault();
 
+    public HttpSenderService(HttpHost targetHost, CloseableHttpClient httpClient) {
+        this.targetHost = targetHost;
+        this.httpClient = httpClient;
+    }
 
     public HttpSenderService(){
 
@@ -71,6 +61,8 @@ public class HttpSenderService {
 
 
 
+
+
     public static HttpSenderService getInstance(){
         if(instance == null){
             instance = new HttpSenderService();
@@ -84,7 +76,14 @@ public class HttpSenderService {
         }
 
         instance.targetHost = new HttpHost(IP, port, "http");
-        return instance;
+        return instance;                                      //!!!
+    }
+
+    public static HttpSenderService getHttpSenderService(String IP, Integer port){
+        HttpSenderService hss = new HttpSenderService();
+        hss.targetHost = new HttpHost(IP, port, "http");
+
+        return hss;
     }
 
     public static Document loadXMLFromString(String xml) throws Exception {
@@ -199,6 +198,16 @@ public class HttpSenderService {
         httpClient.close();
         httpClient = HttpClients.createDefault();
         return name +".jpg";
+    }
+
+
+    @Override
+    public HttpSenderService clone() {
+        try {
+            return (HttpSenderService) super.clone();
+        } catch (CloneNotSupportedException e) {
+            return new HttpSenderService(this.targetHost, this.httpClient);
+        }
     }
 
 }

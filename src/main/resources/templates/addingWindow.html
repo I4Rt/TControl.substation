@@ -60,13 +60,14 @@
                         <div class="step"><text>Шаг переноса:</text> <input id="step" type="text" value="5.0"></div>
                         <div class="declination"><text>Горизонтальное склонение:</text> <input class="change" th:value="${horizontal}" id="horizontal" type="text" value="32.0"></div>
                         <div class="declination"><text>Вертикальное склонение:</text> <input class="change" th:value="${vertical}" id="vertical" type="text" value="11.0"></div>
-                        <div class="focusing"><text>Фокусировка:</text> <input class="change" type="text" th:value="${focusing}" id="focusing"></div>
+                        <div class="focusing"><text>Фокусировка:</text> <input class="change" type="number" min="200" max="5000" th:value="${focusing}" id="focusing"></div>
                     </div>
                 </div>
             </div>
 
             <div class="visionActions">
                 <div class="visionActionButton" id="newArea" title="Добавить область на карту">+А</div>
+                <div class="visionActionButton" id="autoFocusing" title="Сфокусироваться">F</div>
                 <div class="visionActionButton" id="help" title="Справка">?</div>
             </div>
         </div>
@@ -185,8 +186,12 @@
 
     function saveCoordinates(x, y, areaHeight, areaWidth){
         let dataToSend = {};
-
+        if(currentChanging == null){
+            alert('Сначала выберите координаты какой зоны вы хотите изменить');
+            return;
+        }
         dataToSend["id"] = currentChanging;
+        dataToSend["tiID"] = 1;
         dataToSend["horizontal"] = parseFloat($("#horizontal").val());
         dataToSend["vertical"] = parseFloat($("#vertical").val());
         dataToSend["focusing"] = parseFloat($("#focusing").val());
@@ -394,24 +399,23 @@
             response.text().then(function (data){
 
                 currentData = JSON.parse(data);
-                console.log(currentData);
+                if(currentData["newUrl"] == 'error'){
+                    moveAndView();
+                }
+                else{
+                    console.log(currentData);
 
-                // if(currentData["focusing"] != null){
-                //     $("#focusing").val(currentData["focusing"]);
-                // }
-                // if(currentData["horizontal"] != null) {
-                //     $("#horizontal").val(currentData["horizontal"]);
-                // }
-                // if(currentData["vertical"] != null) {
-                //     $("#vertical").val(currentData["vertical"]);
-                // }
-                $(".gotImg").attr("src", currentData["newUrl"]);;
-                console.log(currentData["newUrl"])
 
-                $(".sector").remove();
+                    $(".gotImg").attr("src", currentData["newUrl"]);
 
-                busy = false;
-                console.log("setting busy to " + busy )
+                    console.log(currentData["newUrl"])
+
+                    $(".sector").remove();
+
+                    busy = false;
+                    console.log("setting busy to " + busy )
+                }
+
             });
         })
         .catch((error) => {
@@ -499,5 +503,42 @@
             body: null,
         })
     })
+
+
+    $("#autoFocusing").click(function (){
+        if(!busy){
+            busy = true;
+            fetch("/autoFocusing?thermalImagerId=1", { //ID!!!
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: null,
+            })
+            .then((response) => {
+                response.text().then(function (data){
+
+                    currentData = JSON.parse(data);
+                    console.log(currentData);
+
+                    $(".gotImg").attr("src", currentData["newUrl"]);
+                    $("#focusing").val(currentData["focus"]);
+
+                    $(".sector").remove();
+
+                    busy = false;
+                    console.log("setting busy to " + busy )
+                });
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                busy = false;
+                console.log("setting busy to " + busy )
+            });
+        }
+    })
+
+    $(document).ready(moveAndView());
+
 </script>
 </html>

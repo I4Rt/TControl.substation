@@ -85,10 +85,11 @@ public class MainController {
         model.addAttribute("controlObjects", controlObjects);
 
         ThermalImager ti = thermalImagerRepo.getById(Long.valueOf(1));
+
         model.addAttribute("horizontal", ti.getCurHorizontal());
         model.addAttribute("vertical", ti.getCurVertical());
-        model.addAttribute("focusing", ti.getCurFocusing());
-        model.addAttribute("src", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
+        model.addAttribute("focusing", 500); // not work (non functionality)
+        model.addAttribute("src", "img/loading.gif");
 
 
         User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());

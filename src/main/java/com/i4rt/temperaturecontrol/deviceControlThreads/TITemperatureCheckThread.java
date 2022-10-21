@@ -12,8 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
+import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 @Setter
 @NoArgsConstructor
@@ -132,6 +134,7 @@ public class TITemperatureCheckThread extends Thread{
 
 
                                 coToSave.updateTemperatureClass(curTemperature);
+
 
 
 

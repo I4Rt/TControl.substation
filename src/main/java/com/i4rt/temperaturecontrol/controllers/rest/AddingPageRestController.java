@@ -1,5 +1,7 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
+import com.i4rt.temperaturecontrol.basic.HttpSenderService;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,6 +75,7 @@ public class AddingPageRestController {
 
         JSONObject data = new JSONObject(rowDataJson);
         Long searchControlObjectId = data.getLong("id");
+        Long tiID = data.getLong("tiID");
         Double vertical = data.getDouble("vertical");
         Double horizontal = data.getDouble("horizontal");
         Double focusing = data.getDouble("focusing");
@@ -83,6 +87,7 @@ public class AddingPageRestController {
 
         ControlObject controlObject = controlObjectRepo.getById(searchControlObjectId);
 
+        controlObject.setThermalImager(thermalImagerRepo.getById(tiID));
         controlObject.setVertical(vertical);
         controlObject.setHorizontal(horizontal);
         controlObject.setFocusing(focusing);
@@ -107,16 +112,26 @@ public class AddingPageRestController {
         Double focusing = gotData.getDouble("focusing");
 
         ThermalImager ti = thermalImagerRepo.getById(tiID);
-
         Map<String, Object> data = new HashMap<>();
+
+
+
+
 
         data.put("vertical", vertical);
         data.put("horizontal", horizontal);
         data.put("focusing", focusing);
 
-        String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
-        System.out.println(newUrl);
-        data.put("newUrl", newUrl);
+        if(ti.getIsBusy()){
+            data.put("newUrl", "error");
+
+        }
+        else{
+            String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
+            System.out.println(newUrl);
+            data.put("newUrl", newUrl);
+        }
+
 
         String jsonStringToSend = JSONObject.valueToString(data);
 
@@ -128,6 +143,30 @@ public class AddingPageRestController {
         User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         curUser.setThermalImagerGrabbed(false);
         userRepo.save(curUser);
+    }
+
+    @RequestMapping(value = "autoFocusing", method = RequestMethod.POST)
+    public String autoFocusing(@RequestParam(name = "thermalImagerId") Long id){
+        Map<String, Object> result = new HashMap<>();
+        try {
+        ThermalImager ti = thermalImagerRepo.getById(id);
+
+        result.put("focus", ti.setAutoFocus());
+
+        HttpSenderService httpSenderService = HttpSenderService.setInstance(ti.getIP(), ti.getPort());
+
+        httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
+
+        result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
+
+        String jsonStringToSend = JSONObject.valueToString(result);
+        return jsonStringToSend;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{}";
+        }
+
+
     }
 
 

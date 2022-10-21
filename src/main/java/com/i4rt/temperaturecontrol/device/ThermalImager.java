@@ -67,7 +67,7 @@ public class ThermalImager {
         return 0.0;
     }
     public Double getCurFocusing(){
-        return 1.0;
+        return 200.0;
     }
 
 
@@ -79,7 +79,7 @@ public class ThermalImager {
             vertical *= 10;
             Integer parsedVertical = vertical.intValue();
 
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
 
 
             String bodyMove = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -180,7 +180,7 @@ public class ThermalImager {
             vertical *= 10;
             Integer parsedVertical = vertical.intValue();
 
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
             
 
             String bodyMove = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -212,7 +212,9 @@ public class ThermalImager {
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
 
+                    Integer focusingCounter = 0;
                     while(true){
+                        focusingCounter += 1;
 
                         String focusingBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                 "<PTZAbsoluteEx xmlns=\"http://www.isapi.org/ver20/XMLSchema\" version=\"2.0\">\n" +
@@ -243,6 +245,9 @@ public class ThermalImager {
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
                             System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
+                        }
+                        if(focusingCounter > 30){
+                            return false;
                         }
                         else{
                             System.out.println("focused");
@@ -288,7 +293,7 @@ public class ThermalImager {
 
     public String gotoAndGetImage(Double horizontal, Double vertical, Double focusing){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
             
             Boolean gotoResult = gotoCoordinatesNoConfig(horizontal, vertical, focusing);
             System.out.println(gotoResult);
@@ -306,7 +311,7 @@ public class ThermalImager {
 
     public String gotoAndSaveImage(Double horizontal, Double vertical, Double focusing, String areaName){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
 
             Boolean gotoResult = gotoCoordinates(horizontal, vertical, focusing);
             System.out.println(gotoResult);
@@ -379,7 +384,7 @@ public class ThermalImager {
                     "    <emissivityMode>customsettings</emissivityMode>\n" +
                     "</ThermometryRegion>" ;
 
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
             
 
 
@@ -394,7 +399,7 @@ public class ThermalImager {
 
     public Object getTemperatureInArea(Integer areaId){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
 
 
 
@@ -421,7 +426,7 @@ public class ThermalImager {
 
 
 
-    public Boolean setAutoFocus(){
+    public Integer setAutoFocus(){
         try {
             String body1 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                            "<FocusConfiguration version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\">\n" +
@@ -435,24 +440,40 @@ public class ThermalImager {
             String body2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<FocusConfiguration version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\">\n" +
                     "    <focusStyle>SEMIAUTOMATIC</focusStyle>\n" +
-                    "    <focusLimited>5000</focusLimited>\n" +
+                    "    <focusLimited>10000</focusLimited>\n" +
                     "    <focusSpeed>1</focusSpeed>\n" +
                     "    <focusSensitivity>1</focusSensitivity>\n" +
                     "    <temperatureChangeAdaptEnabled>true</temperatureChangeAdaptEnabled>\n" +
                     "</FocusConfiguration>";
 
-            HttpSenderService httpSenderService = HttpSenderService.setInstance(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
             
 
 
             httpSenderService.sendPutRequest("/ISAPI/Image/channels/2/focusConfiguration", body1);
             httpSenderService.sendPutRequest("/ISAPI/Image/channels/2/focusConfiguration", body2);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+            Thread.sleep(5000);
+            Integer previousFocusing = -29029304;
+            while (true){
+                String answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
+                Thread.sleep(500);
+                Map<String, String> parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
-        return true;
+                Integer curFocusing = Integer.parseInt( parsedAnswer.get("focus") );
+
+                System.out.println("prev: " + previousFocusing);
+                System.out.println("cur: " + curFocusing);
+                if(curFocusing.equals(previousFocusing) ){
+                    return curFocusing;
+                }
+                previousFocusing = curFocusing;
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
 

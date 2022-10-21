@@ -22,8 +22,8 @@ public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
     ArrayList<Measurement> getMeasurementByDatetimeInRange(@Param("searchId") Long searchId, @Param("begin") Date begin, @Param("end") Date end);
 
 
-    @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId order by measurement_id desc")
-    ArrayList<Measurement> getMeasurementByAreaId(@Param("searchId") Long searchId);                               // Переписать поле на datetime!
+    @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId order by measurement_id desc limit :limit")
+    ArrayList<Measurement> getMeasurementByAreaId(@Param("searchId") Long searchId, @Param("limit") Integer limit);                               // Переписать поле на datetime!
 
     @Modifying
     @Transactional

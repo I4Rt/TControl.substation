@@ -13,11 +13,16 @@
 </head>
 <script>
 
+    let begin = "";
+    let end = "";
+    let firstUpdate = true;
     let needUpdate = true;
+    let needUpdateImages = false;
 
-    needShowTemperature = false;
+    let needShowTemperature = false;
 
 
+    let current_id = 0;
 
     let currentData;
 
@@ -25,6 +30,59 @@
 
     let myChart;
 
+    function updateImages(){
+        console.log('need update images ' + needUpdateImages);
+        if(firstUpdate){
+            let imagesNames = currentData['imagesNames'];
+            let insideHTML = '';
+            for(let i = 0; i < imagesNames.length; i++){
+                let imgName = imagesNames[i];
+                insideHTML += '<img src="'+ imgName +'" id="'+current_id+'"/>';
+                current_id += 1;
+            }
+            $('.imagesRow').html(insideHTML)
+            firstUpdate = false;
+        }
+        else{
+            if(needUpdate){
+                let index = 0
+                let imagesNames = currentData['imagesNames'];
+                $('.imagesRow>img').each(function (){
+                    if( ! imagesNames.includes($(this).attr('src'))){
+                        console.log('#' + $(this).attr('id'));
+                        $('#' + $(this).attr('id')).remove();
+                        index += 1;
+                    }
+                })
+                let inside_data = imagesNames;
+                for (let i = index + 1; i > 1; i--){
+                    $('.imagesRow').append('<img src="'+ inside_data[imagesNames.length - i] +'" id="'+current_id+'"/>');
+                    current_id += 1;
+                }
+            }
+            else{
+                if(needUpdateImages){
+                    let imagesNames = currentData['imagesNames'];
+                    console.log('need updating images once. array size: ' + imagesNames.length)
+                    let insideHTML = '';
+                    for(let i = 0; i < imagesNames.length; i++){
+                        let imgName = imagesNames[i];
+                        insideHTML += '<img src="'+ imgName +'" id="'+current_id+'"/>';
+                        current_id += 1;
+                    }
+                    $('.imagesRow').html(insideHTML)
+                    needUpdateImages = false;
+                }
+            }
+        }
+        $('.imagesRow>img').each(function (){
+            $(this).click(function (){
+                console.log('click!')
+                $('.openedImage').attr('src', $(this).attr('src'));
+                $('.imageBG').removeClass('hidden');
+            });
+        });
+    }
 
 
     function updateData(){
@@ -41,15 +99,15 @@
         .then((response) => {
             response.text().then(function (data){
                 currentData = JSON.parse(data);
-                console.log(currentData);
-
-                let tempData = currentData["time"].reverse()
-
-                console.log("time array " + JSON.stringify(tempData))
 
                 dataToSend = {}
-                dataToSend["begin"] = tempData[0]
-                dataToSend["end"] = tempData[tempData.length - 1]
+                if(begin != "" && end != ""){
+                    dataToSend["begin"] = begin;
+                    dataToSend["end"] = end;
+                }
+
+                dataToSend["begin"] = currentData['time'][currentData["time"].length - 1];
+                dataToSend["end"] = currentData['time'][0];
 
                 console.log("dataToSend " + JSON.stringify(dataToSend))
 
@@ -63,8 +121,9 @@
                 .then((response) => {
                     response.text().then(function (data){
                         weatherCurrentData = JSON.parse(data);
+                        weatherCurrentData["time"] = weatherCurrentData["time"];
                         console.log("Weather")
-                        console.log(weatherCurrentData);
+                        // console.log(weatherCurrentData);
 
 
 
@@ -72,6 +131,7 @@
                         if(needUpdate){
                             updatePageStatistics();
                         }
+                        updateImages();
                     })
 
                 })
@@ -113,18 +173,21 @@
         }
     }
     function updatePageStatistics(){
-
-
-        const labels = currentData["time"].reverse();
-        const weatherLabels = currentData["time"].reverse();
+        const labels = currentData["time"];
+        const weatherLabels = weatherCurrentData["time"];
 
         console.log("temp size: " + labels.length)
         console.log("weather size: " + labels.length)
 
+        let totalLabels = []
 
-        let totalLabels = labels
+        for (let n = 0; n < labels.length; n++) {
+            totalLabels[n] = labels[n];
+        }
 
-        for(let k; k < weatherLabels.length; k++){
+
+
+        for(let k = 0; k < weatherLabels.length; k++){
             if(! totalLabels.includes(weatherLabels[k])){
                 totalLabels.push(weatherLabels[k]);
             }
@@ -134,7 +197,7 @@
 
 
 
-        totalLabels = totalLabels.sort();
+        totalLabels = totalLabels.sort(); // time sorting: bug!
 
         let insideData1 = []
         let insideData2 = []
@@ -148,7 +211,6 @@
                 if(currentData["time"][j] == totalLabels[i]){
                     setData1 = true;
                     insideData1.push(currentData["temperature"][j])
-                    break;
                 }
             }
             if(setData1 == false){
@@ -176,17 +238,18 @@
         console.log("bool " + needShowTemperature)
         console.log("temperature data " + currentData["temperature"])
 
-
+        let cloneTime = [...currentData["time"]]
+        let temperatures = [...currentData["temperature"]];
 
         const myData = {
-            labels: labels,
+            labels: needShowTemperature ? totalLabels : cloneTime.reverse(),
             datasets: needShowTemperature ?
             [
                 {
                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период" ,
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
-                    data:  insideData1.reverse(),
+                    data:  insideData1,
                 },
                 {
                     label: "Данные температуры воздуха" ,
@@ -201,7 +264,7 @@
                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период" ,
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
-                    data:  insideData1.reverse(),
+                    data:  temperatures.reverse(),
                 }
             ]
         };
@@ -259,6 +322,9 @@
     }, 3000);
 </script>
 <body>
+    <div class="imageBG hidden">
+        <img src="imgData/17_10/Андрей/13_39_2.jpg" class="openedImage">
+    </div>
     <div class="topBar">
         <div class="buttonsBar">
             <text id="sysActions">Система</text>
@@ -275,8 +341,14 @@
         <div class="myRow noGap">
             <div class="myColumn seventy">
                 <div class="chart">
-                    <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
+                    <img src="img/loading.gif" class="loading" style="height: 300px;">
                     <canvas id="myChart"></canvas>
+                </div>
+
+                <div class="myColumn">
+                    <div class="myRow imagesRow" style="width: 650px; justify-content: flex-start">
+
+                    </div>
                 </div>
 
                 <div class="myColumn">
@@ -395,24 +467,32 @@
 
     function updateObject(id){
         if($(".name").val() != "" && $(".dangerTemp").val() != "" && $(".warningTemp").val() != ""){
-            let currentData = "{ \"id\": " + id +"," +
+            let currentDataInside = "{ \"id\": " + id +"," +
                 "\"name\": \"" + $(".name").val() +"\"," +
                 "\"dangerTemp\": " + $(".dangerTemp").val() +"," +
                 "\"warningTemp\": " + $(".warningTemp").val() +
                 "}";
 
-                console.log(currentData);
+                console.log(currentDataInside);
             fetch("/saveArea", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: currentData,
+                body: currentDataInside,
             })
             .then((response) => {
                 response.text().then(function (data){
-                    alert(data);
-                })
+                    let temp = JSON.parse(data);
+
+
+
+                    if(temp["message"].length < 20){
+                        currentData["temperatureClass"] = temp["temperatureClass"];
+                        updatePageStatisticsTemperature();
+                    }
+                    alert(temp["message"])
+                });
 
             })
             .catch((error) => {
@@ -427,6 +507,8 @@
 
     $("#makeChartRequest").click(function (){
         needUpdate = false;
+        needUpdateImages = true;
+
         let date1 = $("#beginDay").val();
         let normalDate1 = date1.split("-")[2] + "." + date1.split("-")[1] + "." + date1.split("-")[0]
 
@@ -437,6 +519,9 @@
 
         let value1 = normalDate1 + "-" +$("#beginTime").val()+":00"
         let value2 = normalDate2 + "-" +$("#endTime").val()+":00"
+
+        console.log('begin: ' + value1)
+        console.log('end: ' + value2)
 
 
 
@@ -460,23 +545,27 @@
         .then((response) => {
             response.text().then(function (data){
                 currentData = JSON.parse(data);
-                console.log(currentData);
 
+                begin = currentData["time"][0];
+                end = currentData["time"][currentData["time"].length - 1]
 
-
+                //console.log(currentData);
                 updatePageStatistics();
+                updateImages();
             })
         })
         .catch((error) => {
             console.error('Error:', error);
+
         });
 
     });
 
     $("#beginUpdate").click(function (){
         needUpdate = true;
-
-
+        firstUpdate = true;
+        begin = "";
+        end = "";
     });
 
     $(".delButton").click(function (){
@@ -494,6 +583,12 @@
     $('#weatherTemperature').click(function (){
        needShowTemperature = !needShowTemperature;
     });
+
+
+    $('.imageBG').click(function (){
+        $(this).addClass('hidden');
+    });
+
 
 </script>
 
