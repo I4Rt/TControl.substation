@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
@@ -79,6 +80,7 @@ public class ThermalImagersMainControlThread extends Thread {
 
         User user = null;
         while(true) {
+
             user = userRepo.getUserThatGrabbedThermalImager();
             if (user != null) {
                 //System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
@@ -86,7 +88,6 @@ public class ThermalImagersMainControlThread extends Thread {
                 continue;
             } else {
                 List<ThermalImager> thermalImagers = thermalImagerRepo.findAll();
-
 
                 for(Integer i = 0; i < thermalImagers.size(); i++){
                     //проверка на занятость

@@ -90,7 +90,7 @@
 
     <div class="dropdown system hidden">
         <a>Проверить связь</a>
-        <a>Перезапустить сканер</a>
+        <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
     </div>
     <div class="dropdown directions hidden">
         <a href="/main">Главная страница контроля</a>
@@ -538,7 +538,26 @@
         }
     })
 
+    $("#refreshConnections").click(function (){
+        fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                alert(data)
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+
     $(document).ready(moveAndView());
+
 
 </script>
 </html>

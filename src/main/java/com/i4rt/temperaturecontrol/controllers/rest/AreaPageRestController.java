@@ -152,11 +152,7 @@ public class AreaPageRestController {
 
         }
 
-
         System.out.println("Images array: " + preparedToSendData.get("imagesNames"));
-
-
-
 
         String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
 
@@ -167,7 +163,7 @@ public class AreaPageRestController {
     public String getTemperatureWeatherMeasurementJsonString(@RequestBody String dataJson){
         JSONObject data = new JSONObject(dataJson);
 
-        System.out.println("Weather request json: " + dataJson);
+
 
         String begin = data.getString("begin");
         String end = data.getString("end");
@@ -255,7 +251,7 @@ public class AreaPageRestController {
                             Date tempDate = null; // select year!
                             try {
                                 tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-                                System.out.println("temp date: " + tempDate);
+                                //System.out.println("temp date: " + tempDate);
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
@@ -268,7 +264,7 @@ public class AreaPageRestController {
                     }
                 }
             }
-            System.out.println("get images in range: " + preparedToSendData.get("imagesNames"));
+            //System.out.println("get images in range: " + preparedToSendData.get("imagesNames"));
 
             String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
             return jsonStringToSend;

@@ -1,11 +1,14 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 public class MainRestController {
@@ -37,5 +40,16 @@ public class MainRestController {
                 "<text>t: " + weatherMeasurement.getTemperature() + "°</text>" +
                 "<text>p: " + weatherMeasurement.getAtmospherePressure() + " Атм</text>" +
                 "<text>t: " + weatherMeasurement.getRainfall() + " мм</text>";
+    }
+
+    @RequestMapping(value = "resetConnections", method = RequestMethod.GET)
+    public String resetConnections(){
+        try {
+            ConnectionHolder.removeAllConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Возникла ошибка";
+        }
+        return "Подключения обновлены";
     }
 }

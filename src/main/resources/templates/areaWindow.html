@@ -99,56 +99,47 @@
         .then((response) => {
             response.text().then(function (data){
                 currentData = JSON.parse(data);
+                    dataToSend = {}
+                    if(begin != "" && end != ""){
+                        dataToSend["begin"] = begin;
+                        dataToSend["end"] = end;
+                    }
+                    if(needUpdate) {
+                        dataToSend["begin"] = currentData['time'][currentData["time"].length - 1];
+                        dataToSend["end"] = currentData['time'][0];
 
-                dataToSend = {}
-                if(begin != "" && end != ""){
-                    dataToSend["begin"] = begin;
-                    dataToSend["end"] = end;
-                }
+                        console.log("dataToSend " + JSON.stringify(dataToSend))
 
-                dataToSend["begin"] = currentData['time'][currentData["time"].length - 1];
-                dataToSend["end"] = currentData['time'][0];
+                        fetch("/getWeatherTemperature", {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(dataToSend),
+                        })
+                        .then((response) => {
+                            response.text().then(function (data) {
+                                weatherCurrentData = JSON.parse(data);
 
-                console.log("dataToSend " + JSON.stringify(dataToSend))
+                                console.log(weatherCurrentData)
+                                // console.log(weatherCurrentData);
 
-                fetch("/getWeatherTemperature", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(dataToSend),
+
+                                updatePageStatistics();
+
+                                updateImages();
+                            })
+                        })
+                        .catch((error) => {
+                                console.error('Error:', error);
+                        });
+                    }
+                    updatePageStatisticsTemperature()
                 })
-                .then((response) => {
-                    response.text().then(function (data){
-                        weatherCurrentData = JSON.parse(data);
-                        weatherCurrentData["time"] = weatherCurrentData["time"];
-                        console.log("Weather")
-                        // console.log(weatherCurrentData);
-
-
-
-                        updatePageStatisticsTemperature()
-                        if(needUpdate){
-                            updatePageStatistics();
-                        }
-                        updateImages();
-                    })
-
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-
-
-            })
-
         })
         .catch((error) => {
             console.error('Error:', error);
         });
-
-
-
     }
     function updatePageStatisticsTemperature(){
         $(".loading").addClass("hidden");
@@ -186,16 +177,12 @@
         }
 
 
-
         for(let k = 0; k < weatherLabels.length; k++){
             if(! totalLabels.includes(weatherLabels[k])){
                 totalLabels.push(weatherLabels[k]);
             }
         }
         console.log("total size: " + totalLabels.length)
-
-
-
 
         totalLabels = totalLabels.sort(); // time sorting: bug!
 
@@ -403,7 +390,7 @@
 
     <div class="dropdown system hidden">
         <a>Проверить связь</a>
-        <a>Перезапустить сканер</a>
+        <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
     </div>
     <div class="dropdown directions hidden">
         <a href="/main">Главная страница контроля</a>
@@ -543,15 +530,37 @@
             body: dataStringToSend,
         })
         .then((response) => {
-            response.text().then(function (data){
+            response.text().then(function (data) {
                 currentData = JSON.parse(data);
 
-                begin = currentData["time"][0];
-                end = currentData["time"][currentData["time"].length - 1]
+                begin = currentData['time'][currentData['time'].length - 1];
+                end = currentData['time'][0];
 
-                //console.log(currentData);
-                updatePageStatistics();
-                updateImages();
+                dataToSend = {}
+
+
+                dataToSend["begin"] = begin;
+                dataToSend["end"] = end;
+
+                fetch("/getWeatherTemperature", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataToSend),
+                })
+                .then((response) => {
+                    response.text().then(function (data2) {
+                        weatherCurrentData = JSON.parse(data2);
+
+                        updatePageStatistics();
+                        updateImages();
+                    })
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+
+                });
             })
         })
         .catch((error) => {
@@ -582,6 +591,7 @@
 
     $('#weatherTemperature').click(function (){
        needShowTemperature = !needShowTemperature;
+       updatePageStatistics();
     });
 
 
@@ -589,7 +599,23 @@
         $(this).addClass('hidden');
     });
 
-
+    $("#refreshConnections").click(function (){
+        fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                alert(data)
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
 </script>
 
 

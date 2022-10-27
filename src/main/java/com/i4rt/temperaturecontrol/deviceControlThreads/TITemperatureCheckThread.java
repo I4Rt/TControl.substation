@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
@@ -49,16 +50,16 @@ public class TITemperatureCheckThread extends Thread{
 
     @SneakyThrows
     public void run(){
+        try {
+            System.out.println("Begin leaf thread");
+            User user = null;
+            ThermalImager thermalImager = thermalImagerRepo.getById(thermalImagerID);
+            System.out.println("Thermal imager found");
 
-        System.out.println("Begin leaf thread");
-        User user = null;
-        ThermalImager thermalImager = thermalImagerRepo.getById(thermalImagerID);
-        System.out.println("Thermal imager found");
-
-        if(thermalImager != null){
-            List<ControlObject> curControlObjects = this.controlObjectRepo.getControlObjectByTIID(thermalImager.getId());
-            System.out.println("Collection size " + curControlObjects.size());
-            Collections.sort(curControlObjects);
+            if (thermalImager != null) {
+                List<ControlObject> curControlObjects = this.controlObjectRepo.getControlObjectByTIID(thermalImager.getId());
+                System.out.println("Collection size " + curControlObjects.size());
+                Collections.sort(curControlObjects);
             /*
             List<ControlObject> curControlObjects = thermalImager.getControlObjectsArray();
             System.out.println("Collection size " + curControlObjects.size());
@@ -85,99 +86,90 @@ public class TITemperatureCheckThread extends Thread{
              */
 
 
+                for (ControlObject co : curControlObjects) {
 
 
+                    user = userRepo.getUserThatGrabbedThermalImager();
+                    if (user != null) {
+                        System.out.println("User is busy breaking leaf thread");
+                        System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
+                        break;
+                    } else {
+                        System.out.println("User not busy");
+                    }
+
+                    System.out.println("Checking " + co.getName());
+                    if (co.getHorizontal() != null && co.getVertical() != null && co.getFocusing() != null) {
+                        System.out.println("Begin move to coordinates");
+                        thermalImager.gotoAndSaveImage(co.getHorizontal(), co.getVertical(), co.getFocusing(), co.getName());
+                        System.out.println("Moved to coordinates");
+
+                        if (co.getX() != null && co.getY() != null && co.getAreaWidth() != null && co.getAreaHeight() != null) {
+                            String configureResult = thermalImager.configureArea(co.getX(), co.getY(), co.getX() + co.getAreaWidth(), co.getY() + co.getAreaHeight());
+                            System.out.println("Moving result " + configureResult);
+                            if (configureResult.equals("ok")) {
+
+                                //focussing
+
+                                Double curTemperature = (Double) thermalImager.getTemperatureInArea(1);
+
+                                if (curTemperature != null) {
+                                    Measurement newData = new Measurement();
+
+                                    newData.setTemperature(curTemperature);
+
+                                    newData.setDatetime(Calendar.getInstance().getTime());
+
+                                    co.addMeasurement(newData);
+                                    newData.setControlObject(co);
 
 
-
-            for (ControlObject co : curControlObjects){
-
-
-                user = userRepo.getUserThatGrabbedThermalImager();
-                if (user != null) {
-                    System.out.println("User is busy breaking leaf thread");
-                    System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
-                    break;
-                }
-                else{
-                    System.out.println("User not busy");
-                }
-
-                System.out.println("Checking " + co.getName());
-                if(co.getHorizontal() != null && co.getVertical() != null && co.getFocusing() != null){
-                    System.out.println("Begin move to coordinates");
-                    thermalImager.gotoAndSaveImage(co.getHorizontal(), co.getVertical(), co.getFocusing(), co.getName());
-                    System.out.println("Moved to coordinates");
-
-                    if(co.getX() != null && co.getY() != null && co.getAreaWidth() != null && co.getAreaHeight() != null){
-                        String configureResult = thermalImager.configureArea(co.getX(), co.getY(), co.getX() + co.getAreaWidth(), co.getY() + co.getAreaHeight());
-                        System.out.println("Moving result " + configureResult);
-                        if(configureResult.equals("ok")){
-
-                            //focussing
-
-                            Double curTemperature = (Double) thermalImager.getTemperatureInArea(1);
-
-                            if(curTemperature != null){
-                                Measurement newData = new Measurement();
-
-                                newData.setTemperature(curTemperature);
-
-                                newData.setDatetime(Calendar.getInstance().getTime());
-
-                                co.addMeasurement(newData);
-                                newData.setControlObject(co);
+                                    ControlObject coToSave = controlObjectRepo.getById(co.getId());
 
 
-                                ControlObject coToSave = controlObjectRepo.getById(co.getId());
+                                    coToSave.updateTemperatureClass(curTemperature);
 
 
+                                    coToSave.addMeasurement(newData);
+                                    newData.setControlObject(coToSave);
 
-                                coToSave.updateTemperatureClass(curTemperature);
+                                    System.out.println(coToSave.getId());
+                                    System.out.println(coToSave.getName());
+                                    System.out.println(coToSave.getDangerTemp());
+                                    System.out.println(coToSave.getWarningTemp());
+                                    System.out.println(coToSave.getTemperatureClass());
 
+                                    controlObjectRepo.save(coToSave);
+                                    System.out.println("saved");
 
+                                    measurementRepo.save(newData);
 
+                                    System.out.println("Data got");
 
-                                coToSave.addMeasurement(newData);
-                                newData.setControlObject(coToSave);
+                                } else {
+                                    System.out.println("Getting temperature error");
+                                }
 
-                                System.out.println(coToSave.getId());
-                                System.out.println(coToSave.getName());
-                                System.out.println(coToSave.getDangerTemp());
-                                System.out.println(coToSave.getWarningTemp());
-                                System.out.println(coToSave.getTemperatureClass());
-
-                                controlObjectRepo.save(coToSave);
-                                System.out.println("saved");
-
-                                measurementRepo.save(newData);
-
-                                System.out.println("Data got");
-
+                            } else {
+                                System.out.println("Configuring area error");
                             }
-                            else{
-                                System.out.println("Getting temperature error");
-                            }
-
-                        }
-                        else {
-                            System.out.println("Configuring area error");
+                        } else {
+                            continue;
                         }
                     }
-                    else{
-                        continue;
-                    }
+                    //Thread.sleep(5000);
                 }
-                //Thread.sleep(5000);
+                thermalImager.setIsBusy(false);
+
+                thermalImagerRepo.save(thermalImager);
+            } else {
+                System.out.println("Passing: Thermal imager with current id is not exist");
             }
-            thermalImager.setIsBusy(false);
 
-            thermalImagerRepo.save(thermalImager);
         }
-        else{
-            System.out.println("Passing: Thermal imager with current id is not exist");
+        catch (Exception e){
+            System.out.println(e);
+            run();
         }
-
-
     }
 }

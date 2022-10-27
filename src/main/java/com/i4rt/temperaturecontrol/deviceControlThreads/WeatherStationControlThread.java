@@ -32,17 +32,23 @@ public class WeatherStationControlThread extends Thread{
             WeatherStation weatherStation = WeatherStation.getInstance();
 
             weatherStation.makeMeasurements();
+            if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
+               weatherStation.getAtmospherePressure() == 0 && weatherStation.getRainfall() == 0 &&
+               weatherStation.getWindForce() == 0){
+                System.out.println("Weather Station Error");
+            }
+            else{
+                WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
 
-            WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
+                weatherMeasurement.setTemperature(weatherStation.getTemperature());
+                weatherMeasurement.setHumidity(weatherStation.getHumidity());
+                weatherMeasurement.setAtmospherePressure(weatherStation.getAtmospherePressure());
+                weatherMeasurement.setRainfall(weatherStation.getRainfall());
+                weatherMeasurement.setWindForce(weatherStation.getWindForce());
+                weatherMeasurement.setDateTime(Calendar.getInstance().getTime());
 
-            weatherMeasurement.setTemperature(weatherStation.getTemperature());
-            weatherMeasurement.setHumidity(weatherStation.getHumidity());
-            weatherMeasurement.setAtmospherePressure(weatherStation.getAtmospherePressure());
-            weatherMeasurement.setRainfall(weatherStation.getRainfall());
-            weatherMeasurement.setWindForce(weatherStation.getWindForce());
-            weatherMeasurement.setDateTime(Calendar.getInstance().getTime());
-
-            weatherMeasurementRepo.save(weatherMeasurement);
+                weatherMeasurementRepo.save(weatherMeasurement);
+            }
 
 
             Thread.sleep(2000);

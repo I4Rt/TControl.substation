@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -35,11 +36,12 @@ public class HttpSenderService {
 
 
     private HttpHost targetHost = new HttpHost("192.168.1.64", 80, "http");
-    final BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
-    final BasicAuthCache authCache = new BasicAuthCache();
+    private final BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+    private final BasicAuthCache authCache = new BasicAuthCache();
     // Add AuthCache to the execution context
-    final HttpClientContext context = HttpClientContext.create();
-    CloseableHttpClient httpClient = HttpClients.createDefault();
+    private final HttpClientContext context = HttpClientContext.create();
+    private CloseableHttpClient httpClient;
+    
 
     public HttpSenderService(HttpHost targetHost, CloseableHttpClient httpClient) {
         this.targetHost = targetHost;
@@ -82,7 +84,7 @@ public class HttpSenderService {
     public static HttpSenderService getHttpSenderService(String IP, Integer port){
         HttpSenderService hss = new HttpSenderService();
         hss.targetHost = new HttpHost(IP, port, "http");
-
+        
         return hss;
     }
 
@@ -118,11 +120,18 @@ public class HttpSenderService {
     public String sendGetRequest(String request) throws IOException {
 
         HttpGet httpget = new HttpGet(request);
+
+        if(httpClient == null){
+            httpClient = HttpClients.createDefault();
+            ConnectionHolder.addConnection(httpClient);
+        }
         CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
         HttpEntity entity = response.getEntity();
 
-        httpClient.close();
+        ConnectionHolder.removeConnection(httpClient);
         httpClient = HttpClients.createDefault();
+        ConnectionHolder.addConnection(httpClient);
+
         return EntityUtils.toString(entity, "UTF-8");
     }
 
@@ -131,7 +140,10 @@ public class HttpSenderService {
         HttpPut httpPut = new HttpPut(request);
         httpPut.setHeader("Content-type", "application/xml");
         CloseableHttpResponse response;
-
+        if(httpClient == null){
+            httpClient = HttpClients.createDefault();
+            ConnectionHolder.addConnection(httpClient);
+        }
         try{
             StringEntity stringEntity = new StringEntity(body);
             httpPut.getRequestLine();
@@ -142,11 +154,12 @@ public class HttpSenderService {
             throw new RuntimeException(e);
         }
 
-        response = httpClient.execute(targetHost, httpPut, context);
+
         HttpEntity entity = response.getEntity();
 
-        httpClient.close();
+        ConnectionHolder.removeConnection(httpClient);
         httpClient = HttpClients.createDefault();
+        ConnectionHolder.addConnection(httpClient);
         return EntityUtils.toString(entity, "UTF-8");
     }
 
@@ -154,7 +167,11 @@ public class HttpSenderService {
     public String getImage(String location, String request) throws IOException {
         //"/ISAPI/Streaming/channels/2/picture"
         HttpGet httpget = new HttpGet(request);
-
+        System.out.println("connection " + httpClient);
+        if(httpClient == null){
+            httpClient = HttpClients.createDefault();
+            ConnectionHolder.addConnection(httpClient);
+        }
         CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
         //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
@@ -171,15 +188,20 @@ public class HttpSenderService {
         fileOS.flush();
         fileOS.close();
 
-        httpClient.close();
+        ConnectionHolder.removeConnection(httpClient);
         httpClient = HttpClients.createDefault();
+        ConnectionHolder.addConnection(httpClient);
         return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
     }
 
     public String saveImage(String location, String request, String name) throws IOException {
         //"/ISAPI/Streaming/channels/2/picture"
         HttpGet httpget = new HttpGet(request);
-
+        if(httpClient == null){
+            httpClient = HttpClients.createDefault();
+            ConnectionHolder.addConnection(httpClient);
+        }
+        System.out.println("connection " + httpClient);
         CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
         //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
@@ -195,8 +217,9 @@ public class HttpSenderService {
         fileOS.flush();
         fileOS.close();
 
-        httpClient.close();
+        ConnectionHolder.removeConnection(httpClient);
         httpClient = HttpClients.createDefault();
+        ConnectionHolder.addConnection(httpClient);
         return name +".jpg";
     }
 

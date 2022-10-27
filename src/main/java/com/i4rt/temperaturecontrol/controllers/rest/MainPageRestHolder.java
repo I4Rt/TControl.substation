@@ -36,7 +36,7 @@ public class MainPageRestHolder {
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
 
-        ThermalImagersMainControlThread.setInstance(this.controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo);
+        ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo);
 
         ThermalImagersMainControlThread thermalImagersMainControlThread = ThermalImagersMainControlThread.getInstance();
 
@@ -44,7 +44,7 @@ public class MainPageRestHolder {
 
         WeatherStationControlThread weatherStationControlThread = new WeatherStationControlThread(weatherMeasurementRepo);
 
-        weatherStationControlThread.start();
+        //weatherStationControlThread.start();
 
         Calendar prevCalendar = Calendar.getInstance();
         prevCalendar.add(Calendar.DAY_OF_MONTH, -15);
