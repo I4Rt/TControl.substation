@@ -1,13 +1,16 @@
 package com.i4rt.temperaturecontrol.Services;
 
 import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Component
+@ToString
+@Setter
+@Getter
 public class AlertHolder {
 
-    private AlertHolder instance;
+    private static AlertHolder instance;
 
     private Boolean needBeep;
     private Boolean firstTIError;
@@ -17,4 +20,19 @@ public class AlertHolder {
 
     private Boolean weatherStationError;
 
+    private AlertHolder() {
+        this.needBeep = false;
+        this.firstTIError = false;
+        this.secondTIError = false;
+        this.thirdTIError = false;
+        this.fourthTIError = false;
+        this.weatherStationError = false;
+    }
+
+    public static AlertHolder getInstance() {
+        if(instance == null){
+            instance = new AlertHolder();
+        }
+        return instance;
+    }
 }

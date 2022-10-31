@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.WeatherStation;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
@@ -28,18 +29,17 @@ public class WeatherStationControlThread extends Thread{
 
     @SneakyThrows
     public void run(){
-        try{
-            while(true){
-
+        AlertHolder alertHolder = AlertHolder.getInstance();
+        while (true) {
+            try {
                 WeatherStation weatherStation = WeatherStation.getInstance();
 
                 weatherStation.makeMeasurements();
-                if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
+                if (weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
                         weatherStation.getAtmospherePressure() == 0 && weatherStation.getRainfall() == 0 &&
-                        weatherStation.getWindForce() == 0){
+                        weatherStation.getWindForce() == 0) {
                     System.out.println("Weather Station Error");
-                }
-                else{
+                } else {
                     WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
 
                     weatherMeasurement.setTemperature(weatherStation.getTemperature());
@@ -51,13 +51,15 @@ public class WeatherStationControlThread extends Thread{
 
                     weatherMeasurementRepo.save(weatherMeasurement);
                 }
-
-
+                alertHolder.setWeatherStationError(false);
                 Thread.sleep(5000);
+
+
+
+            }catch(Exception e){
+                alertHolder.setWeatherStationError(true);
+                System.out.println(e);
             }
-        }catch (Exception e){
-            System.out.println(e);
-            run();
         }
     }
 }

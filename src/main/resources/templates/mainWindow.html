@@ -6,6 +6,7 @@
 
     <link rel="stylesheet" href="css/mainStyle.css">
     <link rel="stylesheet" href="css/mainAdder.css">
+    <link rel="stylesheet" href="css/messageHolderStyle.css">
     <link rel="stylesheet" href="css/adderInfoStyle.css">
     <link rel="stylesheet" href="css/chooseObjectWindowStyle.css">
     <link rel="stylesheet" href="css/dropdownStyle.css">
@@ -189,6 +190,30 @@
             <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
         </div>
     </div>
+
+    <div class="messageHolder">
+        <div class="message red" id="ti1">
+            <div class="text red">Отсутствует подключение к тепловизору 1</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red" id="ti2">
+            <div class="text red">Отсутствует подключение к тепловизору 2</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red" id="ti3">
+            <div class="text red">Отсутствует подключение к тепловизору 3</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red" id="ti4">
+            <div class="text red">Отсутствует подключение к тепловизору 4</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red" id="ws">
+            <div class="text red">Отсутствует подключение к метеостанции</div>
+            <div class="messageCross red">X</div>
+        </div>
+    </div>
+
 </body>
 
 

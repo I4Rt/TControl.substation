@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
@@ -50,10 +51,12 @@ public class TITemperatureCheckThread extends Thread{
 
     @SneakyThrows
     public void run(){
+        AlertHolder alertHolder = AlertHolder.getInstance();
+        ThermalImager thermalImager = thermalImagerRepo.getById(thermalImagerID);
         try {
             System.out.println("Begin leaf thread");
             User user = null;
-            ThermalImager thermalImager = thermalImagerRepo.getById(thermalImagerID);
+
             System.out.println("Thermal imager found");
 
             if (thermalImager != null) {
@@ -129,7 +132,6 @@ public class TITemperatureCheckThread extends Thread{
 
                                     coToSave.updateTemperatureClass(curTemperature);
 
-
                                     coToSave.addMeasurement(newData);
                                     newData.setControlObject(coToSave);
 
@@ -165,10 +167,37 @@ public class TITemperatureCheckThread extends Thread{
             } else {
                 System.out.println("Passing: Thermal imager with current id is not exist");
             }
-
+            switch (thermalImager.getId().toString()){
+                case "1":
+                    alertHolder.setFirstTIError(false);
+                    break;
+                case "2":
+                    alertHolder.setSecondTIError(false);
+                    break;
+                case "3":
+                    alertHolder.setThirdTIError(false);
+                    break;
+                case "4":
+                    alertHolder.setFourthTIError(false);
+                    break;
+            }
         }
         catch (Exception e){
             System.out.println(e);
+            switch (thermalImager.getId().toString()){
+                case "1":
+                    alertHolder.setFirstTIError(true);
+                    break;
+                case "2":
+                    alertHolder.setSecondTIError(true);
+                    break;
+                case "3":
+                    alertHolder.setThirdTIError(true);
+                    break;
+                case "4":
+                    alertHolder.setFourthTIError(true);
+                    break;
+            }
             run();
         }
     }
