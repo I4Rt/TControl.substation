@@ -3,6 +3,8 @@
     top: 30px;
     right: 10px;
     width: 200px;
+    max-height: 70%;
+    overflow-y: auto;
 
     display: flex;
     flex-direction: column;
@@ -12,7 +14,6 @@
     z-index: 1000000;
 }
 .message{
-    width: 180px;
     padding: 10px;
     border: 2px solid;
     border-radius: 5px;
@@ -26,6 +27,11 @@
     border-color: #772222;
     background-color: #fc6464;
     color: #772222;
+}
+.green{
+    border-color: #417722;
+    background-color: #67e85b;
+    color: #417722;
 }
 
 .text{

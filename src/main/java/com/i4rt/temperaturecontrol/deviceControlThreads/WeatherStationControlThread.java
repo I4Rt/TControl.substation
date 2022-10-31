@@ -29,17 +29,18 @@ public class WeatherStationControlThread extends Thread{
 
     @SneakyThrows
     public void run(){
-        AlertHolder alertHolder = AlertHolder.getInstance();
-        while (true) {
-            try {
-                WeatherStation weatherStation = WeatherStation.getInstance();
 
+        while(true){
+            Thread.sleep(5000);
+            try{
+                WeatherStation weatherStation = WeatherStation.getInstance();
                 weatherStation.makeMeasurements();
-                if (weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
+                if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
                         weatherStation.getAtmospherePressure() == 0 && weatherStation.getRainfall() == 0 &&
-                        weatherStation.getWindForce() == 0) {
+                        weatherStation.getWindForce() == 0){
                     System.out.println("Weather Station Error");
-                } else {
+                }
+                else{
                     WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
 
                     weatherMeasurement.setTemperature(weatherStation.getTemperature());
@@ -51,15 +52,15 @@ public class WeatherStationControlThread extends Thread{
 
                     weatherMeasurementRepo.save(weatherMeasurement);
                 }
+                AlertHolder alertHolder = AlertHolder.getInstance();
                 alertHolder.setWeatherStationError(false);
-                Thread.sleep(5000);
-
-
-
-            }catch(Exception e){
-                alertHolder.setWeatherStationError(true);
+            }catch (Exception e){
                 System.out.println(e);
+                AlertHolder alertHolder = AlertHolder.getInstance();
+                alertHolder.setWeatherStationError(true);
+                System.out.println("finished");
             }
         }
+
     }
 }

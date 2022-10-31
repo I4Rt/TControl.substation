@@ -27,4 +27,7 @@ public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
 
     @Query(nativeQuery = true, value="SELECT * FROM control_object where thermal_imager_id = :ti_id")
     List<ControlObject> getControlObjectByTIID(@Param("ti_id") Long id);
+
+    @Query(nativeQuery = true, value="SELECT * FROM control_object where temperature_class = 'danger'")
+    List<ControlObject> getDanger();
 }

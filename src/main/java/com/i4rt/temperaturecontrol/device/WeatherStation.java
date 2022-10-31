@@ -44,7 +44,7 @@ public class WeatherStation {
     }
 
 
-    public void makeMeasurements() {
+    public void makeMeasurements() throws Exception{
         SerialParameters sp = new SerialParameters();
         Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
         try {
@@ -64,34 +64,37 @@ public class WeatherStation {
                 sp.setStopBits(1);
                 System.out.println("before modbus");
                 ModbusMaster m = ModbusMasterFactory.createModbusMasterRTU(sp);
-                m.connect();
-                System.out.println("after modbus");
+                try{
 
-                // Адрес метеостанции
-                int slaveId = 0x33;
 
-                // Опрашиваемый регистр, 6 - температура
-                int offset = 6;
-                int quantity = 1;
+                    m.connect();
+                    System.out.println("after modbus");
 
-                this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
-                this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
-                this.humidity = getValues(m, slaveId, 7, quantity)/10.0;
-                this.atmospherePressure = getValues(m, slaveId, 8, quantity)/10.0;
-                this.rainfall = getValues(m, slaveId, 9, quantity)/10.0;
+                    // Адрес метеостанции
+                    int slaveId = 0x33;
 
-                System.out.println(this.toString());
+                    // Опрашиваемый регистр, 6 - температура
+                    int offset = 6;
+                    int quantity = 1;
 
-                try {
+                    this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
+                    this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
+                    this.humidity = getValues(m, slaveId, 7, quantity)/10.0;
+                    this.atmospherePressure = getValues(m, slaveId, 8, quantity)/10.0;
+                    this.rainfall = getValues(m, slaveId, 9, quantity)/10.0;
+
+                    System.out.println(this.toString());
+
+
                     m.disconnect();
                 } catch (ModbusIOException e1) {
-                    e1.printStackTrace();
+                    throw e1;
                 }
             }
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         }
 
     }

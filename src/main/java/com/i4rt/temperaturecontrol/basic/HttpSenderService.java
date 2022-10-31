@@ -227,5 +227,4 @@ public class HttpSenderService {
             return new HttpSenderService(this.targetHost, this.httpClient);
         }
     }
-
 }

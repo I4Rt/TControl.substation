@@ -13,6 +13,21 @@
 </head>
 
 <script>
+
+    let needShowFirstTIError = true;
+    let needShowSecondTIError = true;
+    let needShowThirdTIError = true;
+    let needShowFourthTIError = true;
+    let needShowWeatherStationError = true;
+    let needBeep = false;
+    let firstTIError = false;
+    let secondTIError = false;
+    let thirdTIError = false;
+    let fourthTIError = false;
+    let weatherStationError = false;
+
+
+
     let myJsonString = "[" +
         "[" +
         "{\"id\": 1, \"name\": \"Зона 1\", \"temperatureClass\": \"normal\", \"mapX\": 210, \"mapY\": 195}," +
@@ -50,6 +65,11 @@
             console.error('Error:', error);
         });
     }
+
+
+
+
+
     function updateWeather(){
         fetch("/getWeather", {
             method: "POST",
@@ -70,6 +90,7 @@
     }
     setInterval(function(){
         updateData();
+        updateAlertsFetch();
         updateWeather();
     }, 3000);
 
@@ -90,13 +111,14 @@
         $(".areaList").empty();
         let dataToList = currentData[0];
         for(let elementId = 0; elementId < dataToList.length; elementId+=1) {
-            if(dataToList[elementId]["temperatureClass"] == "danger"){
-                beep();
-            }
             $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\" name=\"" + dataToList[elementId]["id"] + "\"></div></a>");
         }
         activateMarkers();
     }
+
+
+
+
 </script>
 <body>
     <div class="topBar">
@@ -192,23 +214,43 @@
     </div>
 
     <div class="messageHolder">
-        <div class="message red" id="ti1">
+        <div class="message green hidden" id="ti1_ok">
+            <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti2_ok">
+            <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti3_ok">
+            <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti4_ok">
+            <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ws_ok">
+            <div class="text green">Подключение к метеостанции восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message red hidden" id="ti1_error">
             <div class="text red">Отсутствует подключение к тепловизору 1</div>
             <div class="messageCross red">X</div>
         </div>
-        <div class="message red" id="ti2">
+        <div class="message red hidden" id="ti2_error">
             <div class="text red">Отсутствует подключение к тепловизору 2</div>
             <div class="messageCross red">X</div>
         </div>
-        <div class="message red" id="ti3">
+        <div class="message red hidden" id="ti3_error">
             <div class="text red">Отсутствует подключение к тепловизору 3</div>
             <div class="messageCross red">X</div>
         </div>
-        <div class="message red" id="ti4">
+        <div class="message red hidden" id="ti4_error">
             <div class="text red">Отсутствует подключение к тепловизору 4</div>
             <div class="messageCross red">X</div>
         </div>
-        <div class="message red" id="ws">
+        <div class="message red hidden" id="ws_error">
             <div class="text red">Отсутствует подключение к метеостанции</div>
             <div class="messageCross red">X</div>
         </div>
@@ -366,12 +408,120 @@
             })
         })
     }
-    $(document).ready(
-        activateMarkers()
-    )
+
     $('#removeMarker').click(function (){
         needDelete = true;
     })
+
+    function updateAlertsFetch(){
+        fetch ("/getAlerts", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    console.log('caught');
+                    let insideData = JSON.parse(data);
+                    if(firstTIError != insideData["firstTIError"]){
+                        needShowFirstTIError = true;
+                    }
+                    else {
+                        needShowFirstTIError = false
+                    }
+                    if(secondTIError != insideData["secondTIError"]){
+                        needShowSecondTIError = true;
+                    }
+                    else {
+                        needShowSecondTIError = false
+                    }
+                    if(thirdTIError != insideData["thirdTIError"]){
+                        needShowThirdTIError = true;
+                    }
+                    else {
+                        needShowThirdTIError = false
+                    }
+                    if(fourthTIError != insideData["fourthTIError"]){
+                        needShowFourthTIError = true;
+                    }
+                    else {
+                        needShowFourthTIError = false
+                    }
+                    if(weatherStationError != insideData["weatherStationError"]){
+                        needShowWeatherStationError = true;
+                    }
+                    else {
+                        needShowWeatherStationError = false
+                    }
+                    needBeep = insideData["beep"];
+                    firstTIError = insideData["firstTIError"];
+                    secondTIError = insideData["secondTIError"];
+                    thirdTIError = insideData["thirdTIError"];
+                    fourthTIError = insideData["fourthTIError"];
+                    weatherStationError = insideData["weatherStationError"];
+                    updateAlerts();
+                    if(needBeep){
+                        beep();
+                    }
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    function updateAlerts(){
+        if(needShowFirstTIError && firstTIError){
+            $("#ti1_ok").addClass('hidden');
+            $("#ti1_error").removeClass('hidden');
+        }
+        if(needShowSecondTIError && secondTIError){
+            $("#ti2_ok").addClass('hidden');
+            $("#ti2_error").removeClass('hidden');
+        }
+        if(needShowThirdTIError && thirdTIError){
+            $("#ti3_ok").addClass('hidden');
+            $("#ti3_error").removeClass('hidden');
+        }
+        if(needShowFourthTIError && fourthTIError){
+            $("#ti4_ok").addClass('hidden');
+            $("#ti4_error").removeClass('hidden');
+        }
+        if(needShowWeatherStationError && weatherStationError){
+            $("#ws_ok").addClass('hidden');
+            $("#ws_error").removeClass('hidden');
+        }
+        if(needShowFirstTIError && !firstTIError){
+            $("#ti1_error").addClass('hidden');
+            $("#ti1_ok").removeClass('hidden');
+        }
+        if(needShowSecondTIError && !secondTIError){
+            $("#ti2_error").addClass('hidden');
+            $("#ti2_ok").removeClass('hidden');
+        }
+        if(needShowThirdTIError && !thirdTIError){
+            $("#ti3_error").addClass('hidden');
+            $("#ti3_ok").removeClass('hidden');
+        }
+        if(needShowFourthTIError && !fourthTIError){
+            $("#ti4_error").addClass('hidden');
+            $("#ti4_ok").removeClass('hidden');
+        }
+        if(needShowWeatherStationError && !weatherStationError){
+            $("#ws_error").addClass('hidden');
+            $("#ws_ok").removeClass('hidden');
+        }
+    }
+    $(".messageCross").each(function (){
+        $(this).click(function (){
+            $(this).parent().addClass("hidden");
+        });
+    });
+    $(document).ready(
+        activateMarkers()
+    )
 </script>
 
 </html>

@@ -7,11 +7,23 @@
     <link rel="stylesheet" href="css/mainStyle.css">
     <link rel="stylesheet" href="css/dropdownStyle.css">
     <link rel="stylesheet" href="css/areaWindowStyle.css">
+    <link rel="stylesheet" href="css/messageHolderStyle.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <script>
+    let needShowFirstTIError = true;
+    let needShowSecondTIError = true;
+    let needShowThirdTIError = true;
+    let needShowFourthTIError = true;
+    let needShowWeatherStationError = true;
+    let needBeep = false;
+    let firstTIError = false;
+    let secondTIError = false;
+    let thirdTIError = false;
+    let fourthTIError = false;
+    let weatherStationError = false;
 
     let begin = "";
     let end = "";
@@ -159,9 +171,7 @@
 
         $("#curTemperatureLine").html(currentData["temperature"][0]);
 
-        if(currentData["temperatureClass"] == "danger"){
-            beep();
-        }
+
     }
     function updatePageStatistics(){
         const labels = currentData["time"];
@@ -304,6 +314,7 @@
             });
     }
     setInterval(function(){
+        updateAlertsFetch();
         updateData();
         updateWeather();
     }, 3000);
@@ -413,7 +424,48 @@
         <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
     </div>
 
-
+    <div class="messageHolder">
+        <div class="message green hidden" id="ti1_ok">
+            <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti2_ok">
+            <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti3_ok">
+            <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti4_ok">
+            <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ws_ok">
+            <div class="text green">Подключение к метеостанции восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message red hidden" id="ti1_error">
+            <div class="text red">Отсутствует подключение к тепловизору 1</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti2_error">
+            <div class="text red">Отсутствует подключение к тепловизору 2</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti3_error">
+            <div class="text red">Отсутствует подключение к тепловизору 3</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti4_error">
+            <div class="text red">Отсутствует подключение к тепловизору 4</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ws_error">
+            <div class="text red">Отсутствует подключение к метеостанции</div>
+            <div class="messageCross red">X</div>
+        </div>
+    </div>
 </body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -614,6 +666,113 @@
         })
         .catch((error) => {
             console.error('Error:', error);
+        });
+    });
+
+    function updateAlertsFetch(){
+        fetch ("/getAlerts", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    console.log('caught');
+                    let insideData = JSON.parse(data);
+                    if(firstTIError != insideData["firstTIError"]){
+                        needShowFirstTIError = true;
+                    }
+                    else {
+                        needShowFirstTIError = false
+                    }
+                    if(secondTIError != insideData["secondTIError"]){
+                        needShowSecondTIError = true;
+                    }
+                    else {
+                        needShowSecondTIError = false
+                    }
+                    if(thirdTIError != insideData["thirdTIError"]){
+                        needShowThirdTIError = true;
+                    }
+                    else {
+                        needShowThirdTIError = false
+                    }
+                    if(fourthTIError != insideData["fourthTIError"]){
+                        needShowFourthTIError = true;
+                    }
+                    else {
+                        needShowFourthTIError = false
+                    }
+                    if(weatherStationError != insideData["weatherStationError"]){
+                        needShowWeatherStationError = true;
+                    }
+                    else {
+                        needShowWeatherStationError = false
+                    }
+                    needBeep = insideData["beep"];
+                    firstTIError = insideData["firstTIError"];
+                    secondTIError = insideData["secondTIError"];
+                    thirdTIError = insideData["thirdTIError"];
+                    fourthTIError = insideData["fourthTIError"];
+                    weatherStationError = insideData["weatherStationError"];
+                    updateAlerts();
+                    if(needBeep){
+                        beep();
+                    }
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    function updateAlerts(){
+        if(needShowFirstTIError && firstTIError){
+            $("#ti1_ok").addClass('hidden');
+            $("#ti1_error").removeClass('hidden');
+        }
+        if(needShowSecondTIError && secondTIError){
+            $("#ti2_ok").addClass('hidden');
+            $("#ti2_error").removeClass('hidden');
+        }
+        if(needShowThirdTIError && thirdTIError){
+            $("#ti3_ok").addClass('hidden');
+            $("#ti3_error").removeClass('hidden');
+        }
+        if(needShowFourthTIError && fourthTIError){
+            $("#ti4_ok").addClass('hidden');
+            $("#ti4_error").removeClass('hidden');
+        }
+        if(needShowWeatherStationError && weatherStationError){
+            $("#ws_ok").addClass('hidden');
+            $("#ws_error").removeClass('hidden');
+        }
+        if(needShowFirstTIError && !firstTIError){
+            $("#ti1_error").addClass('hidden');
+            $("#ti1_ok").removeClass('hidden');
+        }
+        if(needShowSecondTIError && !secondTIError){
+            $("#ti2_error").addClass('hidden');
+            $("#ti2_ok").removeClass('hidden');
+        }
+        if(needShowThirdTIError && !thirdTIError){
+            $("#ti3_error").addClass('hidden');
+            $("#ti3_ok").removeClass('hidden');
+        }
+        if(needShowFourthTIError && !fourthTIError){
+            $("#ti4_error").addClass('hidden');
+            $("#ti4_ok").removeClass('hidden');
+        }
+        if(needShowWeatherStationError && !weatherStationError){
+            $("#ws_error").addClass('hidden');
+            $("#ws_ok").removeClass('hidden');
+        }
+    }
+    $(".messageCross").each(function (){
+        $(this).click(function (){
+            $(this).parent().addClass("hidden");
         });
     });
 </script>
