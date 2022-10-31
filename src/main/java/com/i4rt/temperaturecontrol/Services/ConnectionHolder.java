@@ -25,7 +25,12 @@ public class ConnectionHolder {
 
     public static void removeAllConnection() throws IOException {
         for (CloseableHttpClient chc : connections){
-            chc.close();
+            try{
+                chc.close();
+            }
+            catch (Exception e){
+                System.out.println("Already closed");
+            }
         }
         connections = new ArrayList<>();
         System.out.println("connections size: " + connections.size());

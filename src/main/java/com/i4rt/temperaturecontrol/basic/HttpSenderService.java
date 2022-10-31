@@ -48,13 +48,13 @@ public class HttpSenderService {
         this.httpClient = httpClient;
     }
 
-    public HttpSenderService(){
+    public HttpSenderService(String realm, String nonce){
 
         credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "ask226226"));
 
         DigestScheme digestAuth = new DigestScheme();
-        digestAuth.overrideParamter("realm", "IP Camera(J3898)");
-        digestAuth.overrideParamter("nonce", "4e6d5a6a4e475a6b5a5745364f4456684e6a4e6c5a6a673d");
+        digestAuth.overrideParamter("realm", realm);
+        digestAuth.overrideParamter("nonce", nonce);
         authCache.put(targetHost, digestAuth);
 
         context.setAuthCache(authCache);
@@ -65,24 +65,19 @@ public class HttpSenderService {
 
 
 
-    public static HttpSenderService getInstance(){
-        if(instance == null){
-            instance = new HttpSenderService();
-        }
-        return instance;
-    }
 
-    public static HttpSenderService setInstance(String IP, Integer port){
+
+    public static HttpSenderService setInstance(String IP, Integer port, String realm, String nonce){
         if(instance == null){
-            instance = new HttpSenderService();
+            instance = new HttpSenderService(realm, nonce);
         }
 
         instance.targetHost = new HttpHost(IP, port, "http");
         return instance;                                      //!!!
     }
 
-    public static HttpSenderService getHttpSenderService(String IP, Integer port){
-        HttpSenderService hss = new HttpSenderService();
+    public static HttpSenderService getHttpSenderService(String IP, Integer port, String realm, String nonce){
+        HttpSenderService hss = new HttpSenderService(realm, nonce);
         hss.targetHost = new HttpHost(IP, port, "http");
         
         return hss;

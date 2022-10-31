@@ -190,7 +190,7 @@ public class MainController {
                 if(user.getPassword().equals(user.getPasswordRepeat())){
                     user.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(user.getPassword()));
                     user.setPasswordRepeat(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(user.getPasswordRepeat()));
-                    user.setRole("OPERATOR");
+                    user.setRole(user.getRole());
 
                     System.out.println(user);
 

@@ -28,31 +28,36 @@ public class WeatherStationControlThread extends Thread{
 
     @SneakyThrows
     public void run(){
-        while(true){
-            WeatherStation weatherStation = WeatherStation.getInstance();
+        try{
+            while(true){
 
-            weatherStation.makeMeasurements();
-            if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
-               weatherStation.getAtmospherePressure() == 0 && weatherStation.getRainfall() == 0 &&
-               weatherStation.getWindForce() == 0){
-                System.out.println("Weather Station Error");
+                WeatherStation weatherStation = WeatherStation.getInstance();
+
+                weatherStation.makeMeasurements();
+                if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
+                        weatherStation.getAtmospherePressure() == 0 && weatherStation.getRainfall() == 0 &&
+                        weatherStation.getWindForce() == 0){
+                    System.out.println("Weather Station Error");
+                }
+                else{
+                    WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
+
+                    weatherMeasurement.setTemperature(weatherStation.getTemperature());
+                    weatherMeasurement.setHumidity(weatherStation.getHumidity());
+                    weatherMeasurement.setAtmospherePressure(weatherStation.getAtmospherePressure());
+                    weatherMeasurement.setRainfall(weatherStation.getRainfall());
+                    weatherMeasurement.setWindForce(weatherStation.getWindForce());
+                    weatherMeasurement.setDateTime(Calendar.getInstance().getTime());
+
+                    weatherMeasurementRepo.save(weatherMeasurement);
+                }
+
+
+                Thread.sleep(5000);
             }
-            else{
-                WeatherMeasurement weatherMeasurement = new WeatherMeasurement();
-
-                weatherMeasurement.setTemperature(weatherStation.getTemperature());
-                weatherMeasurement.setHumidity(weatherStation.getHumidity());
-                weatherMeasurement.setAtmospherePressure(weatherStation.getAtmospherePressure());
-                weatherMeasurement.setRainfall(weatherStation.getRainfall());
-                weatherMeasurement.setWindForce(weatherStation.getWindForce());
-                weatherMeasurement.setDateTime(Calendar.getInstance().getTime());
-
-                weatherMeasurementRepo.save(weatherMeasurement);
-            }
-
-
-            Thread.sleep(2000);
+        }catch (Exception e){
+            System.out.println(e);
+            run();
         }
-
     }
 }

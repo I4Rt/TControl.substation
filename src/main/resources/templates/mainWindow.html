@@ -83,7 +83,7 @@
         let dataToDisplay = currentData[1];
         for(let elementId = 0; elementId < dataToDisplay.length; elementId+=1) {
 
-            $(".maxSize").append("<a class=\"marker " + dataToDisplay[elementId]["temperatureClass"] + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  href=\"/area?id=" + dataToDisplay[elementId]["id"] + "\" >");
+            $(".maxSize").append("<a class=\"marker mapMarker " + dataToDisplay[elementId]["temperatureClass"] + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  name=\"" + dataToDisplay[elementId]["id"] + "\" >");
         }
 
         $(".areaList").empty();
@@ -92,8 +92,9 @@
             if(dataToList[elementId]["temperatureClass"] == "danger"){
                 beep();
             }
-            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\"></div></a>");
+            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\" name=\"" + dataToList[elementId]["id"] + "\"></div></a>");
         }
+        activateMarkers();
     }
 </script>
 <body>
@@ -115,14 +116,14 @@
 
             <div  class="mapImage" th:style="'background-image:url(' + ${src} + ');'">
                 <div class="maxSize" >
-                    <a class="marker" th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="onclick=|getInfo(${controlObjectToDisplay.getId})|, style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="${controlObjectToDisplay.temperatureClass}" th:href="@{/area?id={id}(id=${controlObjectToDisplay.getId})}">
+                    <a class="marker mapMarker" th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="${controlObjectToDisplay.temperatureClass}" th:name="${controlObjectToDisplay.id}">
 
                     </a>
                 </div>
             </div>
             <div class="mapActions">
                 <div class="mapActionButton" id="newMarker" title="Добавить маркер на карту">+М</div>
-                <div class="mapActionButton" id="newArea" title="Добавить маркер на карту">+A</div>
+                <div class="mapActionButton" id="removeMarker" title="Добавить маркер на карту">xM</div>
                 <div class="mapActionButton" id="upload" title="Сменить подложку">^</div>
                 <div class="mapActionButton" id="help" title="Справка">?</div>
             </div>
@@ -133,7 +134,7 @@
             <div class="myRow areaList" >
                 <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
                         <text th:utext="${controlObject.name}">Зона 1</text>
-                        <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
+                        <div class="marker " th:classappend="${controlObject.temperatureClass}" th:name="${controlObject.id}"></div>
                 </a>
             </div>
         </div>
@@ -183,7 +184,7 @@
         <div class="myRow" style="height: min-content; margin: 0;">
             <h4 style="height: min-content; margin: 0;">Выберите объект контроля</h4>
         </div>
-        <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:id="${controlObject.id}">
+        <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:name="${controlObject.id}" >
             <text th:utext="${controlObject.name}"></text>
             <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
         </div>
@@ -194,6 +195,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
+    let needDelete = false;
 
     $(".main").click(function (){
         $(".system").addClass("hidden");
@@ -275,7 +277,7 @@
         $(".chooseObjectWindow").removeClass("hidden");
         $(".chooseObjectWindow>.areaInfo").each(function (){
             $(this).click(function (){
-                preparedToAddElementId = $(this).attr('id');
+                preparedToAddElementId = $(this).attr('name');
                 console.log("magic: "+ preparedToAddElementId);
                 $(".chooseObjectWindow").addClass("hidden");
                 readyToAddNew = 2;
@@ -314,7 +316,37 @@
             console.error('Error:', error);
         });
     });
+    function activateMarkers(){
+        $('.maxSize>.mapMarker').each(function (){
+                $(this).click(function () {
+                    console.log('clicked marker');
+                    if(needDelete){
+                        fetch("/dropMapCoordinates?id=" + parseInt($(this).attr('name')), {
+                            method: "PUT",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: null,
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
 
+                    $(this).remove();
+                    needDelete = false
+                }
+                else{
+                    window.location.replace("area?id=" + parseInt($(this).attr('name')));
+                }
+            })
+        })
+    }
+    $(document).ready(
+        activateMarkers()
+    )
+    $('#removeMarker').click(function (){
+        needDelete = true;
+    })
 </script>
 
 </html>

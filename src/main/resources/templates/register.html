@@ -29,6 +29,13 @@
         <label>Повторите пароль</label>
         <input type="password" th:field="*{passwordRepeat}" required/>
     </div>
+    <div>
+        <label>Права доступа</label>
+        <select name="cars" id="cars" th:field="*{role}" required>
+            <option value="OPERATOR">OPERATOR</option>
+            <option value="ADMIN">ADMIN</option>
+        </select>
+    </div>
     <button type="submit">Зарегистрировать пользователя</button>
 </form>
 <br>

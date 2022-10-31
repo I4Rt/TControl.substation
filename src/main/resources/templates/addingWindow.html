@@ -6,7 +6,7 @@
 
     <link rel="stylesheet" href="css/mainStyle.css">
     <link rel="stylesheet" href="css/dropdownStyle.css">
-    <link rel="stylesheet" href="css/addingWindowStyle.css">
+    <link rel="stylesheet" href="css/addingWindow.css">
     <link rel="stylesheet" href="css/adderInfoStyle.css">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
@@ -31,22 +31,20 @@
             <div class="vision">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">ТВ1</button>
+                        <button class="nav-link active" id="1" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">ТВ1</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">ТВ2</button>
+                        <button class="nav-link" id="2" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">ТВ2</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ТВ3</button>
+                        <button class="nav-link" id="3" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ТВ3</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
 
-                    <div class="divCenterHolder tab-pane fade show active " id="home" role="tabpanel" aria-labelledby="home-tab">
+                    <div class="divCenterHolder tab-pane fade show " role="tabpanel" >
                         <div class="gotImage"><img class="gotImg" th:src="${src}"></div>
                     </div>
-                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">2</div>
-                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">3</div>
                 </div>
 
                 <div class="thermalCameraActionRow">
@@ -171,6 +169,7 @@
 
     $(".chooseAble>.areaInfo").each(function (){
         $(this).click(function (){
+            $('.sector').remove();
             currentChanging = $(this).attr('id');
             console.log("Current id: " + currentChanging)
             getCoordinatesDataById(currentChanging);
@@ -224,6 +223,7 @@
 
 
     function getCoordinatesDataById(id){
+        $(".gotImg").attr("src", "img/loading.gif");
         fetch("/getCoordinatesById?id=" + id, {
             method: "POST",
             headers: {
@@ -234,24 +234,33 @@
         .then((response) => {
             response.text().then(function (data){
                 currentData = JSON.parse(data);
-                console.log(currentData);
+                if(currentData["tiID"] == "null"){
+                    $(".gotImg").attr("src", "img/notfound.png");
+                    alert("Координаты данной зоны не назначены");
+                }
+                else{
 
-                if(currentData["focusing"] != null){
-                    $("#focusing").val(currentData["focusing"]);
-                }
-                if(currentData["horizontal"] != null) {
-                    $("#horizontal").val(currentData["horizontal"]);
-                }
-                if(currentData["vertical"] != null) {
-                    $("#vertical").val(currentData["vertical"]);
-                }
-                $(".gotImg").attr("src", currentData["newUrl"]);
-                console.log(currentData["newUrl"])
+                    if(currentData["focusing"] != null){
+                        $("#focusing").val(currentData["focusing"]);
+                    }
+                    if(currentData["horizontal"] != null) {
+                        $("#horizontal").val(currentData["horizontal"]);
+                    }
+                    if(currentData["vertical"] != null) {
+                        $("#vertical").val(currentData["vertical"]);
+                    }
+                    $(".gotImg").attr("src", currentData["newUrl"]);
+                    console.log(currentData["newUrl"])
 
-                let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
-                console.log(areaDiv);
-                $(".sector").remove();
-                $(".gotImage").append(areaDiv);
+                    $(".active").removeClass("active");
+                    $("#" + currentData["tiID"]).addClass("active")
+
+                    let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
+                    console.log(areaDiv);
+                    $(".sector").remove();
+                    $(".gotImage").append(areaDiv);
+                }
+
             });
         })
         .catch((error) => {
@@ -376,11 +385,11 @@
 
 
     function moveAndView(){
-        
+
         busy = true;
         console.log("setting busy to " + busy )
         let bodyToGoto = {};
-        bodyToGoto["tiId"] = 1
+        bodyToGoto["tiId"] = parseInt($(".active").attr('id'));
         bodyToGoto["horizontal"] = parseFloat($('#horizontal').val())
         bodyToGoto["vertical"] = parseFloat($('#vertical').val())
         bodyToGoto["focusing"] = parseFloat($('#focusing').val())
@@ -399,8 +408,13 @@
             response.text().then(function (data){
 
                 currentData = JSON.parse(data);
+
                 if(currentData["newUrl"] == 'error'){
                     moveAndView();
+                }
+                else if(currentData["status"] == 500){
+                    $('.gotImg').attr('src', 'img/disconnect.png')
+                    alert('Соединение с тепловизором не установлено.')
                 }
                 else{
                     console.log(currentData);
@@ -419,8 +433,9 @@
             });
         })
         .catch((error) => {
-            console.error('Error:', error);
-            busy = false;
+            console.error('Error:', error)
+
+            busy = false
             console.log("setting busy to " + busy )
         })
     }
@@ -434,6 +449,17 @@
            }
        });
     });
+
+    $('.nav-tabs>.nav-item').each(
+        function () {
+            $(this).click(function (){
+                $(".sector").remove();
+                $('#horizontal').val(0)
+                $('#vertical').val(0)
+                $('#focusing').val(500)
+                moveAndView();
+            })
+        })
 
 
     $('.up').click(function (){
@@ -507,8 +533,9 @@
 
     $("#autoFocusing").click(function (){
         if(!busy){
+            console.log("/autoFocusing?thermalImagerId=" + $(".active").attr('id'))
             busy = true;
-            fetch("/autoFocusing?thermalImagerId=1", { //ID!!!
+            fetch("/autoFocusing?thermalImagerId=" + parseInt($(".active").attr('id')), { //ID!!!
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
@@ -555,6 +582,7 @@
             console.error('Error:', error);
         });
     });
+
 
     $(document).ready(moveAndView());
 

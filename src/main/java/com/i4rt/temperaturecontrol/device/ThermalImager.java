@@ -36,6 +36,12 @@ public class ThermalImager {
     private String IP;
 
     @Column
+    private String realm;
+
+    @Column
+    private String nonce;
+
+    @Column
     private Integer port;
 
     @Column
@@ -79,7 +85,7 @@ public class ThermalImager {
             vertical *= 10;
             Integer parsedVertical = vertical.intValue();
 
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
 
 
             String bodyMove = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -180,7 +186,7 @@ public class ThermalImager {
             vertical *= 10;
             Integer parsedVertical = vertical.intValue();
 
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             
 
             String bodyMove = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -293,7 +299,7 @@ public class ThermalImager {
 
     public String gotoAndGetImage(Double horizontal, Double vertical, Double focusing){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             
             Boolean gotoResult = gotoCoordinatesNoConfig(horizontal, vertical, focusing);
             System.out.println(gotoResult);
@@ -311,7 +317,7 @@ public class ThermalImager {
 
     public String gotoAndSaveImage(Double horizontal, Double vertical, Double focusing, String areaName){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
 
             Boolean gotoResult = gotoCoordinates(horizontal, vertical, focusing);
             System.out.println(gotoResult);
@@ -384,7 +390,7 @@ public class ThermalImager {
                     "    <emissivityMode>customsettings</emissivityMode>\n" +
                     "</ThermometryRegion>" ;
 
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             
 
 
@@ -399,7 +405,7 @@ public class ThermalImager {
 
     public Object getTemperatureInArea(Integer areaId){
         try {
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
 
 
 
@@ -446,7 +452,7 @@ public class ThermalImager {
                     "    <temperatureChangeAdaptEnabled>true</temperatureChangeAdaptEnabled>\n" +
                     "</FocusConfiguration>";
 
-            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port);
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             
 
 

@@ -97,7 +97,7 @@ public class TITemperatureCheckThread extends Thread{
                     } else {
                         System.out.println("User not busy");
                     }
-
+                    Thread.sleep(1000); // ???
                     System.out.println("Checking " + co.getName());
                     if (co.getHorizontal() != null && co.getVertical() != null && co.getFocusing() != null) {
                         System.out.println("Begin move to coordinates");

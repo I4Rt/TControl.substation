@@ -41,32 +41,33 @@ public class AddingPageRestController {
     public String getCoordinates(@RequestParam Long id){
 
         ControlObject controlObject = controlObjectRepo.getById(id);
-
-        ThermalImager ti = controlObject.getThermalImager();
-
         Map<String, Object> data = new HashMap<>();
+        ThermalImager ti = controlObject.getThermalImager();
+        if(ti != null) {
 
-        data.put("id", id);
-        data.put("vertical", controlObject.getVertical());
-        data.put("horizontal", controlObject.getHorizontal());
 
-        data.put("focusing", controlObject.getFocusing());
 
-        data.put("x", controlObject.getX());
-        data.put("y", controlObject.getY());
-        data.put("areaHeight", controlObject.getAreaHeight());
-        data.put("areaWidth", controlObject.getAreaWidth());
+            data.put("id", id);
+            data.put("tiID", controlObject.getThermalImager().getId());
+            data.put("vertical", controlObject.getVertical());
+            data.put("horizontal", controlObject.getHorizontal());
 
-        String newUrl = ti.gotoAndGetImage(controlObject.getHorizontal(), controlObject.getVertical(), controlObject.getFocusing());
-        System.out.println(newUrl);
-        data.put("newUrl", newUrl);
+            data.put("focusing", controlObject.getFocusing());
 
-        data.put("newUrl", newUrl);
+            data.put("x", controlObject.getX());
+            data.put("y", controlObject.getY());
+            data.put("areaHeight", controlObject.getAreaHeight());
+            data.put("areaWidth", controlObject.getAreaWidth());
 
+            String newUrl = ti.gotoAndGetImage(controlObject.getHorizontal(), controlObject.getVertical(), controlObject.getFocusing());
+            System.out.println(newUrl);
+            data.put("newUrl", newUrl);
+
+        }
+        else{
+            data.put("tiID", "null");
+        }
         String jsonStringToSend = JSONObject.valueToString(data);
-
-
-
         return jsonStringToSend;
     }
 
@@ -153,7 +154,7 @@ public class AddingPageRestController {
 
         result.put("focus", ti.setAutoFocus());
 
-        HttpSenderService httpSenderService = HttpSenderService.setInstance(ti.getIP(), ti.getPort());
+        HttpSenderService httpSenderService = HttpSenderService.setInstance(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
 
         httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
 
