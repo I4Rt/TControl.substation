@@ -185,7 +185,7 @@ public class CreateExcelReport {
             String info = "Время превышения температур: ";
             StringBuilder sb = new StringBuilder(info);
             for (Measurement measurement: overheatingMeasurements){
-                sb.append(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(measurement.getDatetime()));
+                sb.append(new SimpleDateFormat("dd.MM.yyyy").format(measurement.getDatetime()));
                 sb.append(", ");
             }
 
@@ -197,7 +197,7 @@ public class CreateExcelReport {
 
         // создание файла отчета
         String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".xlsx";
-        FileOutputStream out = new FileOutputStream(System.getProperty("user.dir") + "/src/main/upload/static/report/" +
+        FileOutputStream out = new FileOutputStream(System.getProperty("user.dir") + "/src/main/upload/static/reports/" +
                 date);
         book.write(out);
         out.close();

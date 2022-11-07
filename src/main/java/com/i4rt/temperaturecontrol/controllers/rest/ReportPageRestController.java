@@ -60,7 +60,7 @@ public class ReportPageRestController {
             System.out.println("Report generation error: " + e);
         }
 
-        result.put("reportName", "report/" + name);
+        result.put("reportName", "reports/" + name);
 
         String jsonStringToSend = JSONObject.valueToString(result);
         return jsonStringToSend;
