@@ -131,7 +131,7 @@ public class ControlObject implements Comparable<ControlObject>{
 
     public String getCoordinatesString(){
         if(getHorizontal() != null && getVertical() != null && getX() != null && getY() != null && getFocusing() != null){
-            return "(("+getHorizontal()+"°, "+getVertical()+"°), ("+getX()+", "+getY()+"), "+getFocusing()+")";
+            return "(("+getHorizontal()+"°, "+getVertical()+"°), ("+getX()+", "+getY()+") - ("+(int)(getX() + getHorizontal())+", "+(int)(getY() + getVertical())+"), "+getFocusing()+")";
         }
         return "Не заданы";
 

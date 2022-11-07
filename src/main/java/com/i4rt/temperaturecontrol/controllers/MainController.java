@@ -157,7 +157,7 @@ public class MainController {
             model.addAttribute("adderClass", "hidden");
         }
 
-        return "areaWindow";
+        return "newAreaWindow";
     }
 
 
@@ -173,7 +173,7 @@ public class MainController {
         model.addAttribute("user",  user);
         model.addAttribute("message",  "");
 
-        return "register";
+        return "registerPage";
     }
 
     @PostMapping("/registerUser")
@@ -216,15 +216,32 @@ public class MainController {
     @GetMapping("/login")
     public String loginPage(Model model){
 
-
-
         User user = new User();
 
         model.addAttribute("user", user);
         model.addAttribute("message", "");
-        return "login";
+        return "loginPage";
     }
 
+    @GetMapping("/report")
+    public String reportPage(Model model){
+
+        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        model.addAttribute("user", user);
+
+        user.setThermalImagerGrabbed(false);
+
+        userRepo.save(user);
+
+        if(user.getRole().equals("ADMIN")){
+            model.addAttribute("adderClass", "");
+        }
+        else{
+            model.addAttribute("adderClass", "hidden");
+        }
+
+        return "/reportPage";
+    }
 
 
 
@@ -237,6 +254,8 @@ public class MainController {
         model.addAttribute("message", "Неверные данные входа");
         return "login";
     }
+
+
 
 
 }

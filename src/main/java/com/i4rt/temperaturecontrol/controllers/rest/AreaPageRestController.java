@@ -139,7 +139,7 @@ public class AreaPageRestController {
                             e.printStackTrace();
                         }
 
-                        if(endingDate.compareTo(tempDate) == -1 && beginningDate.compareTo(tempDate) == 1){
+                        if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
                             ((ArrayList<String>)preparedToSendData.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
                         }
                     }

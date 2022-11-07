@@ -170,6 +170,7 @@
     <div class="dropdown directions hidden">
         <a href="/main">Главная страница контроля</a>
         <a href="/newArea">Создать новый объект контроля</a>
+        <a href="/report">Сформировать отчет</a>
     </div>
     <div class="dropdown user hidden">
         <div class="myColumn">
@@ -335,11 +336,12 @@
         if(readyToAddNew < 0){
             readyToAddNew = 0;
         }
+        $(".mapImage").css({"cursor": "default"});
         console.log(readyToAddNew);
     });
 
     $("#newMarker").click(function (){
-
+        $(".mapImage").css({"cursor": "pointer"});
         console.log("Ready to add")
         $(".chooseObjectWindow").removeClass("hidden");
         $(".chooseObjectWindow>.areaInfo").each(function (){
@@ -386,6 +388,7 @@
     function activateMarkers(){
         $('.maxSize>.mapMarker').each(function (){
                 $(this).click(function () {
+                    $(".mapImage").css({"cursor": "default"});
                     console.log('clicked marker');
                     if(needDelete){
                         fetch("/dropMapCoordinates?id=" + parseInt($(this).attr('name')), {
@@ -411,6 +414,8 @@
 
     $('#removeMarker').click(function (){
         needDelete = true;
+        $(".mapImage").css({"cursor": "no-drop"});
+
     })
 
     function updateAlertsFetch(){

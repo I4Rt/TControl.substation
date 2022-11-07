@@ -58,19 +58,35 @@
         else{
             if(needUpdate){
                 let index = 0
+                let exist_index = 0
                 let imagesNames = currentData['imagesNames'];
                 $('.imagesRow>img').each(function (){
                     if( ! imagesNames.includes($(this).attr('src'))){
                         console.log('#' + $(this).attr('id'));
                         $('#' + $(this).attr('id')).remove();
                         index += 1;
+                        return;
                     }
-                })
-                let inside_data = imagesNames;
-                for (let i = index + 1; i > 1; i--){
-                    $('.imagesRow').append('<img src="'+ inside_data[imagesNames.length - i] +'" id="'+current_id+'"/>');
-                    current_id += 1;
+                    exist_index += 1;
+                });
+                if(exist_index < 50 - index){
+                    console.log("exist: " + exist_index)
+                    console.log("total images count: " + imagesNames.length)
+                    for (let m = exist_index; m < imagesNames.length; m++){
+                        console.log("Adding 1")
+                        $('.imagesRow').append('<img src="'+ imagesNames[m] +'" id="'+current_id+'"/>');
+                        current_id += 1;
+                    }
                 }
+                else{
+                    for (let i = index + 1; i > 1; i--){
+                        console.log("Adding 2")
+                        $('.imagesRow').append('<img src="'+ imagesNames[imagesNames.length - i] +'" id="'+current_id+'"/>');
+                        current_id += 1;
+                    }
+                }
+
+
             }
             else{
                 if(needUpdateImages){
@@ -286,6 +302,9 @@
             document.getElementById('myChart'),
             config
         );
+        $(".loading").addClass("hidden");
+        $("#myChart").removeClass("hidden");
+
 
     };
 
@@ -384,12 +403,12 @@
                 </div>
             </div>
             <div class="myColumn thirty">
-                <div class="myRow start"><text id="curId" th:text="${controlObject.id}"></text></div>
+                <div class="myRow start hidden"><text id="curId" th:text="${controlObject.id}"></text></div>
                 <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
                 <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
                 <div class="myRow "><text>Повышенная температура, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
                 <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
-                <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.temperatureClass}">42°</b></div></div>
+                <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.temperatureClass}">Обновление</b></div></div>
 
                 <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
                 <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
@@ -406,6 +425,7 @@
     <div class="dropdown directions hidden">
         <a href="/main">Главная страница контроля</a>
         <a href="/newArea">Создать новый объект контроля</a>
+        <a href="/report">Сформировать отчет</a>
     </div>
     <div class="dropdown user hidden">
         <div class="myColumn">
@@ -545,6 +565,8 @@
     }
 
     $("#makeChartRequest").click(function (){
+        $(".loading").removeClass("hidden");
+        $("#myChart").addClass("hidden");
         needUpdate = false;
         needUpdateImages = true;
 
@@ -623,6 +645,8 @@
     });
 
     $("#beginUpdate").click(function (){
+        $(".loading").removeClass("hidden");
+        $("#myChart").addClass("hidden");
         needUpdate = true;
         firstUpdate = true;
         begin = "";

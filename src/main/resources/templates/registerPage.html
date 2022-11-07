@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация пользователя</title>
+</head>
+<style>
+    *{
+        font-family: "Arial";
+    }
+
+    body{
+        margin:0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .formHolder{
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .formHolder>*{
+        width: 100%;
+    }
+
+    .loginForm{
+
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+    }
+    .loginForm>*{
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 25px;
+        gap: 10px;
+    }
+    .loginForm>*>input, .loginForm>*>select{
+        height: 18px;
+    }
+
+</style>
+<body>
+<div class="formHolder">
+    <h1 >Регистрация</h1>
+    <form class="loginForm" action="/registerUser" th:object="${user}" method="POST" enctype="utf8">
+        <div>
+            <label>Имя</label>
+            <input th:field="*{name}" required/>
+        </div>
+        <div>
+            <label>Фамилия</label>
+            <input th:field="*{surname}" required/>
+        </div>
+        <div>
+            <label>Логин</label>
+            <input th:field="*{login}" required/>
+        </div>
+        <div>
+            <label>Пароль</label>
+            <input type="password" th:field="*{password}" required/>
+        </div>
+        <div>
+            <label>Повторите пароль</label>
+            <input type="password" th:field="*{passwordRepeat}" required/>
+        </div>
+        <div>
+            <label>Права доступа</label>
+            <select name="cars" id="cars" th:field="*{role}" required>
+                <option value="OPERATOR">OPERATOR</option>
+                <option value="ADMIN">ADMIN</option>
+            </select>
+        </div>
+        <button type="submit">Зарегистрировать пользователя</button>
+    </form>
+    <br>
+    <label style="color: red" th:text="${message}"></label>
+    <br>
+    <a href="/main">На главную</a>
+</div>
+
+</body>
+</html>

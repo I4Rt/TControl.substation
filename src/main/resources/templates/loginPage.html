@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+
+</head>
+<style>
+    *{
+        font-family: "Arial";
+    }
+
+    body{
+        margin:0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .formHolder{
+        padding: 10px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+    }
+
+    .formHolder>*{
+        width: 100%;
+    }
+
+    .loginForm{
+
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+    }
+    .loginForm>*{
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 25px;
+        gap: 10px;
+    }
+    .loginForm>*>input{
+        height: 18px;
+    }
+
+</style>
+<body>
+<div class="formHolder">
+    <h1 >Вход</h1>
+    <form class="loginForm" action="/login" th:object="${user}" method="POST" enctype="utf8">
+
+        <div>
+            <label>Логин</label>
+            <input th:field="*{login}" required/>
+        </div>
+        <div>
+            <label>Пароль</label>
+            <input type="password" th:field="*{password}" required/>
+        </div>
+
+        <button type="submit">Войти</button>
+    </form>
+    <div class="infoMessage" th:if="${param.error}">
+        Invalid username and password.
+    </div>
+    <div class="infoMessage" th:if="${param.logout}">
+        You have been logged out.
+    </div>
+</div>
+
+
+
+
+</body>
+</html>
