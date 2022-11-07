@@ -185,9 +185,14 @@ public class CreateExcelReport {
                     controlObject.getId(), (Double) controlObject.getWarningTemp());
             String info = "Время превышения температур: ";
             StringBuilder sb = new StringBuilder(info);
+            ArrayList<String> uniqueDates = new ArrayList<>();
             for (Measurement measurement: overheatingMeasurements){
-                sb.append(new SimpleDateFormat("dd.MM.yyyy").format(measurement.getDatetime()));
-                sb.append(", ");
+                String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(measurement.getDatetime());
+                if (!uniqueDates.contains(nowDate)){
+                    uniqueDates.add(nowDate);
+                    sb.append(nowDate);
+                    sb.append(", ");
+                }
             }
 
             // вывод информации превышения температур
