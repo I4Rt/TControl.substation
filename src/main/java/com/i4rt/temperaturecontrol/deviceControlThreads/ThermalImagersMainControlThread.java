@@ -1,21 +1,13 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
-import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
+import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
-import com.i4rt.temperaturecontrol.model.ControlObject;
-import com.i4rt.temperaturecontrol.model.Measurement;
 import com.i4rt.temperaturecontrol.model.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 
 
@@ -30,6 +22,7 @@ public class ThermalImagersMainControlThread extends Thread {
     private ControlObjectRepo controlObjectRepo;
 
     private MeasurementRepo measurementRepo;
+    private WeatherMeasurementRepo weatherMeasurementRepo;
 
     private ThermalImagerRepo thermalImagerRepo;
 
@@ -37,14 +30,15 @@ public class ThermalImagersMainControlThread extends Thread {
 
 
 
-    public ThermalImagersMainControlThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public ThermalImagersMainControlThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, WeatherMeasurementRepo weatherMeasurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
+        this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
     }
 
-    public static void setInstance(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo){
+    public static void setInstance(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo){
 
         if(instance == null){
             instance = new ThermalImagersMainControlThread();
@@ -52,6 +46,7 @@ public class ThermalImagersMainControlThread extends Thread {
         instance.setControlObjectRepo(controlObjectRepo);
         instance.setMeasurementRepo(measurementRepo);
         instance.setThermalImagerRepo(thermalImagerRepo);
+        instance.weatherMeasurementRepo = weatherMeasurementRepo;
         instance.setUserRepo(userRepo);
     }
     public static ThermalImagersMainControlThread getInstance(){
@@ -93,7 +88,7 @@ public class ThermalImagersMainControlThread extends Thread {
                     //проверка на занятость
                     if( !thermalImagers.get(i).getIsBusy() ){
                         System.out.println("Starting thermal imager thread");
-                        TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo, thermalImagers.get(i).getId());
+                        TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
 
                         tiTemperatureCheckThread.start();
 

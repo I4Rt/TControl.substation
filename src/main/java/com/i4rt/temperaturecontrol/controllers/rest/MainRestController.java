@@ -64,7 +64,7 @@ public class MainRestController {
         AlertHolder alertHolder = AlertHolder.getInstance();
         System.out.println("Alert holder: " + alertHolder);
         Map<String, Object> preparedToSendData = new HashMap<>();
-        preparedToSendData.put("beep", controlObjectRepo.getDanger().size() > 0 ? true : false);
+        preparedToSendData.put("beep", controlObjectRepo.getDanger().size() > 0 || controlObjectRepo.getDangerDifference().size() > 0 ? true : false);
         preparedToSendData.put("firstTIError", alertHolder.getFirstTIError());
         preparedToSendData.put("secondTIError", alertHolder.getSecondTIError());
         preparedToSendData.put("thirdTIError", alertHolder.getThirdTIError());

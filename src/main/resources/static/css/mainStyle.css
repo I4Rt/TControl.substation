@@ -205,6 +205,10 @@ body{
 .danger{
     color: red;
 }
+.dangerDifference{
+    color: red;
+
+}
 
 .marker.normal{
     background-color: forestgreen;
@@ -214,6 +218,10 @@ body{
 }
 .marker.danger{
     background-color: red;
+}
+.marker.dangerDifference{
+    background: rgb(255,255,255);
+    background: radial-gradient(circle, rgba(255,255,255,1) 30%, rgba(255,0,0,1) 30%);
 }
 .marker.noData{
     background-color: darkgray;

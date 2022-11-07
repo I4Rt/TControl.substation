@@ -406,7 +406,7 @@
                 <div class="myRow start hidden"><text id="curId" th:text="${controlObject.id}"></text></div>
                 <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
                 <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
-                <div class="myRow "><text>Повышенная температура, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
+                <div class="myRow "><text style="width: 55%">Критическая разность температур, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
                 <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
                 <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.temperatureClass}">Обновление</b></div></div>
 

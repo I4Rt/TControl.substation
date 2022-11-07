@@ -30,4 +30,6 @@ public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
 
     @Query(nativeQuery = true, value="SELECT * FROM control_object where temperature_class = 'danger'")
     List<ControlObject> getDanger();
+    @Query(nativeQuery = true, value="SELECT * FROM control_object where temperature_class = 'dangerDifference'")
+    List<ControlObject> getDangerDifference();
 }

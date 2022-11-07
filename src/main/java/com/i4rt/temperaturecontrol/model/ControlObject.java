@@ -66,23 +66,21 @@ public class ControlObject implements Comparable<ControlObject>{
     private Integer mapY;
 
     @Column(nullable = false)
-    private Double warningTemp;
+    private Double warningTemp; // This is a danger temperature difference
     @Column(nullable = false)
     private Double dangerTemp;
 
 
-    public void updateTemperatureClass(Double curTemp){
-        if(curTemp < warningTemp){
-            temperatureClass = "normal";
+    public void updateTemperatureClass(Double curTemp, Double curWeatherTemp){
+
+        if(curTemp > dangerTemp) {
+            temperatureClass = "danger";
         }
-        else if(curTemp < dangerTemp){
-            temperatureClass = "warning";
+        else if(Math.abs(curTemp - curWeatherTemp) > warningTemp){
+            temperatureClass = "dangerDifference";
         }
         else{
-            temperatureClass = "danger";
-
-
-
+            temperatureClass = "normal";
         }
 
         System.out.println("temperature class of " + name + " is " + temperatureClass);

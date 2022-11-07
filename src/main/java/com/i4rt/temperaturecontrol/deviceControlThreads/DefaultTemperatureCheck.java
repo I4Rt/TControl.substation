@@ -104,7 +104,7 @@ public class DefaultTemperatureCheck extends Thread{
 
                             measurementRepo.save(newData);
 
-                            co.updateTemperatureClass(curTemperature);
+                            //co.updateTemperatureClass(curTemperature, weatherTemperature);
 
                             controlObjectRepo.save(co);
 

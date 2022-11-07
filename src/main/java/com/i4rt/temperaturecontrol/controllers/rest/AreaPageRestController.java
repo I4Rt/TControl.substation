@@ -58,7 +58,7 @@ public class AreaPageRestController {
                         curControlObject.setName(data.getString("name"));
                         curControlObject.setWarningTemp(data.getDouble("warningTemp"));
                         curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
-                        curControlObject.updateTemperatureClass(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature());
+                        curControlObject.updateTemperatureClass(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature(), weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
                     }
                 }
             }

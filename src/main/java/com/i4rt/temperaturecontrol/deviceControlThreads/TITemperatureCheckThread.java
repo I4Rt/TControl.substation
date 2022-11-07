@@ -1,11 +1,7 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
 import com.i4rt.temperaturecontrol.Services.AlertHolder;
-import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
+import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.Measurement;
@@ -14,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
-import java.awt.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -29,6 +23,7 @@ public class TITemperatureCheckThread extends Thread{
     private MeasurementRepo measurementRepo;
 
     private ThermalImagerRepo thermalImagerRepo;
+    private WeatherMeasurementRepo weatherMeasurementRepo;
     private UserRepo userRepo;
     
     private Long thermalImagerID;
@@ -37,12 +32,14 @@ public class TITemperatureCheckThread extends Thread{
 
 
 
-    public TITemperatureCheckThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, Long thermalImagerID) {
+    public TITemperatureCheckThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, WeatherMeasurementRepo weatherMeasurementRepo, UserRepo userRepo, Long thermalImagerID) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
+        this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.userRepo = userRepo;
         this.thermalImagerID = thermalImagerID;
+
     }
 
     
@@ -134,7 +131,7 @@ public class TITemperatureCheckThread extends Thread{
                                     ControlObject coToSave = controlObjectRepo.getById(co.getId());
 
 
-                                    coToSave.updateTemperatureClass(curTemperature);
+                                    coToSave.updateTemperatureClass(curTemperature, weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
 
                                     coToSave.addMeasurement(newData);
                                     newData.setControlObject(coToSave);

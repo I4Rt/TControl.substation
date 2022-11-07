@@ -34,7 +34,7 @@ public class MainPageRestController {
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
 
-        ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo);
+        ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo, weatherMeasurementRepo);
 
         ThermalImagersMainControlThread thermalImagersMainControlThread = ThermalImagersMainControlThread.getInstance();
 
