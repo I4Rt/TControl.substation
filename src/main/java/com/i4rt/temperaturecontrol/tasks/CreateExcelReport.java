@@ -46,7 +46,7 @@ public class CreateExcelReport {
         this.weatherMeasurementRepo = weatherMeasurementRepo;
     }
 
-    public void createMainSheet() throws IOException {
+    public String createMainSheet() throws IOException {
 
         // создание главного эксель листа
         XSSFWorkbook book = new XSSFWorkbook();
@@ -197,12 +197,14 @@ public class CreateExcelReport {
         }
 
         // создание файла отчета
-        FileOutputStream out = new FileOutputStream(System.getProperty("user.dir") + "/src/main/upload/" +
-                new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".xlsx");
+        String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".xlsx";
+        FileOutputStream out = new FileOutputStream(System.getProperty("user.dir") + "/src/main/upload/static/report" +
+                date);
         book.write(out);
         out.close();
 
         System.out.println("Done");
+        return date;
     }
 
     public static ArrayList<Date> getTotalDates(ControlObject controlObject,

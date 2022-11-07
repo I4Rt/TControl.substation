@@ -213,7 +213,7 @@ public class AreaPageRestController {
 
         CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo,
                 this.thermalImagerRepo, this.userRepo, this.weatherMeasurementRepo);
-        createExcelReport.createMainSheet();
+        String name = createExcelReport.createMainSheet();
 
         JSONObject data = new JSONObject(dataJson);
         Long searchControlObjectId = data.getLong("id");
