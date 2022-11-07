@@ -77,7 +77,8 @@ public class CreateExcelReport {
         // вывод всех подконтрольных областей и задание им стиля
         for (int i = 0; i < rowSize + 1; i++) {
             Row row = sheet.createRow(i);
-            for (int j = 0; j < controlObjects.size(); j++) {
+            for (int j = 0; j < columnSize; j++) {
+                if (i + j >= controlObjects.size()) break;
                 Cell cell = row.createCell(j);
 
                 ControlObject controlObject = controlObjects.get(j + i);
@@ -93,7 +94,7 @@ public class CreateExcelReport {
                     cell.setCellStyle(redStyle);
                     overheatedAreaList.add(controlObject);
                 }
-                cell.setCellValue(controlObjects.get(i).getName());
+                cell.setCellValue(controlObjects.get(j).getName());
             }
         }
 
@@ -150,7 +151,7 @@ public class CreateExcelReport {
             Cell cell = row.createCell(0);
             cell.setCellValue("Область " + controlObject.getName());
             cell.setCellStyle(redStyle);
-            sheet.autoSizeColumn(0);
+//            sheet.autoSizeColumn(0);
 
             // строка с граничными температурами
             Row tempBorders = sheet.createRow(row.getRowNum() + 1);
@@ -245,7 +246,7 @@ public class CreateExcelReport {
         ArrayList<Double> temperatures = new ArrayList<>();
         ArrayList<Double> weatherTemperatures = new ArrayList<>();
 
-        // проверка массивов на наличие даты и взятие с них соответственныз температур
+        // проверка массивов на наличие даты и взятие с них соответственных температур
         for (Date date: totalDates){
             for (int i = 0; i < measurements.size(); i++){
                 if (measurements.get(i).getDatetime() == date){
