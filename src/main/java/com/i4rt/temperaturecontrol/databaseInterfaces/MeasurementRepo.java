@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.Document;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -24,6 +25,9 @@ public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
 
     @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId order by measurement_id desc limit :limit")
     ArrayList<Measurement> getMeasurementByAreaId(@Param("searchId") Long searchId, @Param("limit") Integer limit);                               // Переписать поле на datetime!
+
+    @Query(nativeQuery = true, value ="SELECT * FROM measurement where control_object_id = :searchId and temperature >= :dangerTemp order by measurement_id")
+    ArrayList<Measurement> getOverheatingMeasurement(@Param("searchId") Long searchId, @Param("dangerTemp") Double dangerTemp);
 
     @Modifying
     @Transactional

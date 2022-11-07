@@ -1,17 +1,17 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
-import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.WeatherMeasurementRepo;
+import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.Measurement;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
+import com.i4rt.temperaturecontrol.tasks.CreateExcelReport;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.xml.bind.SchemaOutputResolver;
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,11 +25,19 @@ public class AreaPageRestController {
     private final MeasurementRepo measurementRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
+    @Autowired
+    private final ThermalImagerRepo thermalImagerRepo;
+    @Autowired
+    private final UserRepo userRepo;
 
-    public AreaPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
+    public AreaPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,
+                                  WeatherMeasurementRepo weatherMeasurementRepo, ThermalImagerRepo thermalImagerRepo,
+                                  UserRepo userRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
+        this.thermalImagerRepo = thermalImagerRepo;
+        this.userRepo = userRepo;
     }
 
     //Может быть баг с добавлением новой области
@@ -201,7 +209,12 @@ public class AreaPageRestController {
     }
 
     @RequestMapping(value="getTemperatureInRange",method = RequestMethod.POST)
-    public String getTemperatureMeasurementInRangeJsonString(@RequestBody String dataJson){
+    public String getTemperatureMeasurementInRangeJsonString(@RequestBody String dataJson) throws IOException {
+
+        CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo,
+                this.thermalImagerRepo, this.userRepo, this.weatherMeasurementRepo);
+        createExcelReport.createMainSheet();
+
         JSONObject data = new JSONObject(dataJson);
         Long searchControlObjectId = data.getLong("id");
         String begin = data.getString("begin");
