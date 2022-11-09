@@ -121,6 +121,7 @@ public class TITemperatureCheckThread extends Thread{
                                     Measurement newData = new Measurement();
 
                                     newData.setTemperature(curTemperature);
+                                    newData.setWeatherTemperatureDifference(Math.abs(curTemperature - weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature())); // !
 
                                     newData.setDatetime(Calendar.getInstance().getTime());
 

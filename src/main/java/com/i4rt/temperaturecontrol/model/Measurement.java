@@ -22,6 +22,8 @@ public class Measurement extends MeasurementData{
 
     @Column(nullable = false)
     private Double temperature;
+    @Column(nullable = false)
+    private Double weatherTemperatureDifference;
 
 
     @Column(nullable = false)
