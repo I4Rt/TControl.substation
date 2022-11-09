@@ -66,7 +66,7 @@ public class CreateExcelReport {
 //        greenStyle.setDataFormat(format.getFormat("dd.mm.yyyy h:mm:ss"));
 
         // список всех подконтрольных объектов
-        List<ControlObject> controlObjects = this.controlObjectRepo.getControlObjectsToDisplay();
+        List<ControlObject> controlObjects = this.controlObjectRepo.findAll();
 
         // строки занимаемые выводом ячеек
         int rowSize = controlObjects.size() / 5;
@@ -77,11 +77,13 @@ public class CreateExcelReport {
         // вывод всех подконтрольных областей и задание им стиля
         for (int i = 0; i < rowSize + 1; i++) {
             Row row = sheet.createRow(i);
-            for (int j = 0; j < columnSize; j++) {
-                if (i + j >= controlObjects.size()) break;
-                Cell cell = row.createCell(j);
+            for (int j = i * 5; j < i * 5 + columnSize; j++) {
+                if (j >= controlObjects.size()){
+                    break;
+                }
+                Cell cell = row.createCell(j - i * 5);
 
-                ControlObject controlObject = controlObjects.get(j + i);
+                ControlObject controlObject = controlObjects.get(j);
                 boolean overheating = false;
 
                 //проверка на перегретость
@@ -97,12 +99,15 @@ public class CreateExcelReport {
                 cell.setCellValue(controlObjects.get(j).getName());
             }
         }
-
+        Integer index = 0;
         for (ControlObject controlObject : overheatedAreaList) {
+
             List<Measurement> measurements = controlObject.getMeasurement();
+            index += 1;
+            System.out.println("Area " + index + " of " + overheatedAreaList.size());
 
             // эксель лист под каждую область с температурами
-            XSSFSheet cellSheet = book.createSheet("Область " + controlObject.getName());
+            XSSFSheet cellSheet = book.createSheet("Область #" + controlObject.getId()+ "-" + controlObject.getName() );
 
             // название области
             Row areaRow = cellSheet.createRow(0);
@@ -124,7 +129,9 @@ public class CreateExcelReport {
             // index (0) - температуры тепловизора, index (1) - температуры метеостанции
             ArrayList<ArrayList<Double>> totalTemperatures = getTotalTemperatures(controlObject,
                     this.weatherMeasurementRepo, this.measurementRepo, totalDates, beginningDate, endingDate);
-
+            if(totalTemperatures.isEmpty()){
+                continue;
+            }
             // вывод измерений на отдельный лист эксель
             for (int i = 0; i < totalDates.size(); i++) {
                 Row rowInf = cellSheet.createRow(i + 2);
@@ -229,7 +236,7 @@ public class CreateExcelReport {
 
         // добавляем даты измерений с метеостанции
         for (WeatherMeasurement weatherMeasurement: weatherMeasurements){
-            if (!totalDates.contains(weatherMeasurement.getDateTime())) totalDates.add(weatherMeasurement.getDateTime());
+            if (!totalDates.contains(weatherMeasurement.getDatetime())) totalDates.add(weatherMeasurement.getDatetime());
         }
 
         Collections.sort(totalDates);
@@ -245,6 +252,9 @@ public class CreateExcelReport {
         // массивы измерений
         ArrayList<Measurement> measurements = measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(),
                 beginningDate, endingDate);
+        if(measurements.size() == 0){
+            return new ArrayList<ArrayList<Double>>();
+        }
         ArrayList<WeatherMeasurement> weatherMeasurements = weatherMeasurementRepo
                 .getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate);
 
@@ -260,7 +270,7 @@ public class CreateExcelReport {
                 }
             }
             for (int i = 0; i < weatherMeasurements.size(); i++){
-                if (weatherMeasurements.get(i).getDateTime() == date){
+                if (weatherMeasurements.get(i).getDatetime() == date){
                     weatherTemperatures.add(weatherMeasurements.get(i).getTemperature());
                     temperatures.add(null);
                 }

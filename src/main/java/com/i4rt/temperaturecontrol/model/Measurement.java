@@ -10,7 +10,7 @@ import java.util.Date;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Measurement {
+public class Measurement extends MeasurementData{
     @Id
     @Column(name = "measurement_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +22,7 @@ public class Measurement {
 
     @Column(nullable = false)
     private Double temperature;
+
 
     @Column(nullable = false)
     private Date datetime;

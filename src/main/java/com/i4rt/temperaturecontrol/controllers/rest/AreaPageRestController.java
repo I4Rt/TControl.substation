@@ -185,7 +185,7 @@ public class AreaPageRestController {
 
             for(WeatherMeasurement weatherMeasurement: results){
                 //System.out.println(weatherMeasurement.getId());
-                ((ArrayList<String>)preparedToSendData.get("time")).add(weatherMeasurement.getDateTime().toString());
+                ((ArrayList<String>)preparedToSendData.get("time")).add(weatherMeasurement.getDatetime().toString());
 
                 ((ArrayList<Double>)preparedToSendData.get("weatherTemperature")).add(weatherMeasurement.getTemperature());
             }

@@ -11,7 +11,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class WeatherMeasurement {
+public class WeatherMeasurement extends MeasurementData{
     @Id
     @Column(name = "weather_measurement_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,5 +33,5 @@ public class WeatherMeasurement {
     private Double rainfall;
 
     @Column(name = "datetime")
-    private Date dateTime;
+    private Date datetime;
 }

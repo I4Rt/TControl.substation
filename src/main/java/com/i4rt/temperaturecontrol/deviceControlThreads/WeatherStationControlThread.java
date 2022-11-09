@@ -48,7 +48,7 @@ public class WeatherStationControlThread extends Thread{
                     weatherMeasurement.setAtmospherePressure(weatherStation.getAtmospherePressure());
                     weatherMeasurement.setRainfall(weatherStation.getRainfall());
                     weatherMeasurement.setWindForce(weatherStation.getWindForce());
-                    weatherMeasurement.setDateTime(Calendar.getInstance().getTime());
+                    weatherMeasurement.setDatetime(Calendar.getInstance().getTime());
 
                     weatherMeasurementRepo.save(weatherMeasurement);
                 }

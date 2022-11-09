@@ -25,7 +25,7 @@ public class ControlObject implements Comparable<ControlObject>{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(unique = true)
     private String name;
 
 
