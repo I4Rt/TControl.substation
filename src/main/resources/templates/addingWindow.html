@@ -162,6 +162,9 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
+    let allowed = false;
+    let allowedSelected = false;
+
     let needShowFirstTIError = true;
     let needShowSecondTIError = true;
     let needShowThirdTIError = true;
@@ -236,6 +239,7 @@
                 $(this).removeClass("selected");
             });
             $(this).addClass("selected")
+            allowedSelected = true;
 
 
 
@@ -297,11 +301,18 @@
                     currentData = JSON.parse(data);
                     console.log("Error may be: " + data)
                     if(currentData["newUrl"] == "error"){
+                        allowed = false;
                         $('.gotImg').attr('src', 'img/disconnect.png')
 
                         alert('Соединение с тепловизором не установлено.')
                     }
+                    else if (currentData["newUrl"] == 'conError'){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Соединение с тепловизором не установлено.')
+                    }
                     else if(currentData["tiID"] == "null"){
+                        allowed = false;
                         $(".gotImg").attr("src", "img/notfound.png");
                         alert("Координаты данной зоны не назначены");
                     }
@@ -389,59 +400,75 @@
         let coordinateX = e.pageX - offset.left;
         let coordinateY = e.pageY - offset.top;
         console.log("(" + coordinateX + "; " + coordinateY + ")");
-        if(ready1 == 3){
-            $(".gotImage").addClass("readyToAdd");
-        }
-        else if(ready1 == 2){
-            if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
 
-                $(".selectorPoint").remove();
-                $(".sector").remove();
+        if(ready1 != 0){
+            if(allowedSelected){
+                if(allowed){
+                    if(ready1 == 3){
+                        $(".gotImage").addClass("readyToAdd");
+                    }
+                    else if(ready1 == 2){
+
+                        if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
+
+                            $(".selectorPoint").remove();
+                            $(".sector").remove();
 
 
-                let p1 = "<div class='selectorPoint' style='top:"+ (coordinateY-2) +"px; left:"+ (coordinateX - 2) +"px;'></div>"
-                firstCoordinate = [coordinateX, coordinateY];
+                            let p1 = "<div class='selectorPoint' style='top:"+ (coordinateY-2) +"px; left:"+ (coordinateX - 2) +"px;'></div>"
+                            firstCoordinate = [coordinateX, coordinateY];
 
-                $(".gotImage").append(p1);
+                            $(".gotImage").append(p1);
 
 
+                        }
+                        else{
+                            $(".gotImage").removeClass("readyToAdd");
+                            firstCoordinate = null;
+                            ready1 = 0;
+                        }
+
+                    }
+                    else if(ready1 == 1 && firstCoordinate != null){
+                        $(".selectorPoint").remove();
+
+                        if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
+                            let areaWidth = Math.abs(coordinateX - firstCoordinate[0]);
+                            let areaHeight = Math.abs(coordinateY - firstCoordinate[1]);
+
+                            let x = Math.min(coordinateX, firstCoordinate[0]);
+                            let y = Math.min(coordinateY, firstCoordinate[1]);
+
+                            let areaDiv = "<div class='sector' style='top:"+ y +"px; left:"+ x +"px; height:"+ areaHeight +"px; width:"+ areaWidth +"px;'></div>"
+
+                            $(".gotImage").append(areaDiv);
+
+                            saveCoordinates(x, y, areaHeight, areaWidth);
+                            console.log("ok")
+                        }
+
+                        $(".gotImage").removeClass("readyToAdd");
+                        firstCoordinate = null;
+                    }
+
+
+                    ready1 -= 1;
+                    if (ready1 < 0){
+                        ready1 = 0;
+                    }
+
+                    console.log(ready1);
+                }
+                else{
+                    alert("Сначала выберите тепловизор.")
+                    ready1 = 0;
+                }
             }
             else{
-                $(".gotImage").removeClass("readyToAdd");
-                firstCoordinate = null;
+                alert("Сначала выберите объект для изменения координат.")
                 ready1 = 0;
             }
         }
-        else if(ready1 == 1 && firstCoordinate != null){
-            $(".selectorPoint").remove();
-
-            if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
-                let areaWidth = Math.abs(coordinateX - firstCoordinate[0]);
-                let areaHeight = Math.abs(coordinateY - firstCoordinate[1]);
-
-                let x = Math.min(coordinateX, firstCoordinate[0]);
-                let y = Math.min(coordinateY, firstCoordinate[1]);
-
-                let areaDiv = "<div class='sector' style='top:"+ y +"px; left:"+ x +"px; height:"+ areaHeight +"px; width:"+ areaWidth +"px;'></div>"
-
-                $(".gotImage").append(areaDiv);
-
-                saveCoordinates(x, y, areaHeight, areaWidth);
-                console.log("ok")
-            }
-
-            $(".gotImage").removeClass("readyToAdd");
-            firstCoordinate = null;
-        }
-
-
-        ready1 -= 1;
-        if (ready1 < 0){
-            ready1 = 0;
-        }
-
-        console.log(ready1);
-
     });
 
 
@@ -475,17 +502,30 @@
                 response.text().then(function (data){
 
                     currentData = JSON.parse(data);
+                    console.log(data)
 
                     if(currentData["newUrl"] == 'error'){
+                        allowed = false;
                         moveAndView();
                     }
-                    else if(currentData["status"] == 500){
+                    else if(currentData["newUrl"] == 'errorBusy'){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Тепловизор занят. Не удалось подключиться к тепловизору.')
+                    }
+                    else if (currentData["newUrl"] == 'conError'){
+                        allowed = false;
                         $('.gotImg').attr('src', 'img/disconnect.png')
                         alert('Соединение с тепловизором не установлено.')
                     }
+                    else if(currentData["status"] == 500){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Произошла ошибка. Попробуйте снова.')
+                    }
                     else{
+                        allowed = true;
                         console.log(currentData);
-
 
                         $(".gotImg").attr("src", currentData["newUrl"]);
 
@@ -520,6 +560,7 @@
     $('.nav-tabs>.nav-item').each(
         function () {
             $(this).click(function (){
+                $(".gotImg").attr("src", "img/loading.gif")
                 $(".sector").remove();
                 $('#horizontal').val(0)
                 $('#vertical').val(0)
@@ -629,7 +670,12 @@
                     busy = false;
                     console.log("setting busy to " + busy )
                 });
+
         }
+        else {
+            console.log("too busy for focusing")
+        }
+
     })
 
     $("#refreshConnections").click(function (){
@@ -763,7 +809,9 @@
         });
     });
 
-    $(document).ready(moveAndView());
+    $(document).ready(function (){
+        setTimeout(moveAndView(), 1000)
+    });
 
 
 </script>

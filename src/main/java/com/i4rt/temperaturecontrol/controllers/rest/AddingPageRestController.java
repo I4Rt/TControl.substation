@@ -128,9 +128,14 @@ public class AddingPageRestController {
 
         }
         else{
-            String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
-            System.out.println(newUrl);
-            data.put("newUrl", newUrl);
+            try{
+                String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
+                System.out.println(newUrl);
+                data.put("newUrl", newUrl);
+            }
+            catch (Exception e){
+                data.put("newUrl", "conError");
+            }
         }
 
 

@@ -6,6 +6,7 @@ import com.i4rt.temperaturecontrol.basic.FileUploadUtil;
 import com.i4rt.temperaturecontrol.basic.HttpSenderService;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import lombok.*;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.hibernate.annotations.Proxy;
 import org.springframework.mock.web.MockMultipartFile;
@@ -308,11 +309,14 @@ public class ThermalImager {
                 httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
                 return "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg"; //!
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            else{
+                return "conError";
+            }
         }
-        System.out.println("gotoAndGetImage Error");
-        return "error";
+        catch (Exception e) {
+            e.printStackTrace();
+            return "conError";
+        }
     }
 
     public String gotoAndSaveImage(Double horizontal, Double vertical, Double focusing, String areaName){
