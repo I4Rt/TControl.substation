@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class CreateExcelReport {
@@ -44,7 +41,7 @@ public class CreateExcelReport {
         this.weatherMeasurementRepo = weatherMeasurementRepo;
     }
 
-    public String createMainSheet(Date beginningDate, Date endingDate) throws IOException {
+    public String createMainSheet(Map<String, Object> preparedToSendData) throws IOException {
 
         // создание главного эксель листа
         XSSFWorkbook book = new XSSFWorkbook();
@@ -62,8 +59,6 @@ public class CreateExcelReport {
 
         CellStyle dateStyle = book.createCellStyle();
         dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy hh:mm:ss.000"));
-//        redStyle.setDataFormat(format.getFormat("dd.mm.yyyy h:mm:ss"));
-//        greenStyle.setDataFormat(format.getFormat("dd.mm.yyyy h:mm:ss"));
 
         // список всех подконтрольных объектов
         List<ControlObject> controlObjects = this.controlObjectRepo.findAll();
@@ -120,16 +115,12 @@ public class CreateExcelReport {
             int numCellValue = 1;
             int numCellWeather = 4;
 
-            List<WeatherMeasurement> weatherMeasurements = this.weatherMeasurementRepo.
-                    getLastWeatherMeasurements((long) measurements.size());
-
-            ArrayList<Date> totalDates = getTotalDates(controlObject, this.weatherMeasurementRepo,
-                    this.measurementRepo, beginningDate, endingDate);
+            ArrayList<Date> totalDates = (ArrayList<Date>) preparedToSendData.get("time");
 
             // index (0) - температуры тепловизора, index (1) - температуры метеостанции
-            ArrayList<ArrayList<Double>> totalTemperatures = getTotalTemperatures(controlObject,
-                    this.weatherMeasurementRepo, this.measurementRepo, totalDates, beginningDate, endingDate);
-            if(totalTemperatures.isEmpty()){
+//            ArrayList<ArrayList<Double>> totalTemperatures = getTotalTemperatures(controlObject,
+//                    this.weatherMeasurementRepo, this.measurementRepo, totalDates, beginningDate, endingDate);
+            if(((ArrayList<Object>)preparedToSendData.get("weatherTemperature")).isEmpty()){
                 continue;
             }
             // вывод измерений на отдельный лист эксель
@@ -144,12 +135,16 @@ public class CreateExcelReport {
 
                 // столбец значений
                 Cell cellValue = rowInf.createCell(numCellValue);
-                if (totalTemperatures.get(0).get(i) == null) cellValue.setBlank();
-                else cellValue.setCellValue(totalTemperatures.get(0).get(i));
+                if (((ArrayList<Object>) preparedToSendData.get("weatherTemperature")).get(i).getClass()
+                        == WeatherMeasurement.class) cellValue.setBlank();
+                else cellValue.setCellValue(((ArrayList<Measurement>) preparedToSendData.get("weatherTemperature"))
+                        .get(i).getTemperature());
 
                 Cell cellWeather = rowInf.createCell(numCellWeather);
-                if (totalTemperatures.get(1).get(i) == null) cellWeather.setBlank();
-                else cellWeather.setCellValue(totalTemperatures.get(1).get(i));
+                if (((ArrayList<Object>) preparedToSendData.get("weatherTemperature")).get(i).getClass()
+                        == Measurement.class) cellWeather.setBlank();
+                else cellWeather.setCellValue(((ArrayList<WeatherMeasurement>) preparedToSendData.get("weatherTemperature"))
+                        .get(i).getTemperature());
 
             }
 
