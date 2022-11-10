@@ -240,6 +240,7 @@ public class ThermalImager {
                         System.out.println("focusing");
                         System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
+                        Thread.sleep(200);
 
                         answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
 
@@ -247,18 +248,16 @@ public class ThermalImager {
 
 
                         if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20)){
-                            Thread.sleep(200);
-
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
                             System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
                         }
-                        if(focusingCounter > 30){
-                            return false;
-                        }
                         else{
                             System.out.println("focused");
                             break;
+                        }
+                        if(focusingCounter > 30){
+                            return false;
                         }
                     }
 

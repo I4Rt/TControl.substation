@@ -91,13 +91,13 @@
 </div>
 
 <div class="dropdown system hidden">
-    <a>Проверить связь</a>
-    <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
-</div>
-<div class="dropdown directions hidden">
     <a href="/main">Главная страница контроля</a>
     <a href="/newArea">Создать новый объект контроля</a>
     <a href="/report">Сформировать отчет</a>
+</div>
+<div class="dropdown directions hidden">
+    <a>Проверить связь</a>
+    <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
 </div>
 <div class="dropdown user hidden">
     <div class="myColumn">
@@ -162,6 +162,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
+
     let allowed = false;
     let allowedSelected = false;
 
@@ -197,7 +198,7 @@
                     waiting = false;
                 }
             },
-            500
+            800
         );
     }
 
@@ -231,18 +232,20 @@
 
     $(".chooseAble>.areaInfo").each(function (){
         $(this).click(function (){
-            $('.sector').remove();
-            currentChanging = $(this).attr('id');
-            console.log("Current id: " + currentChanging)
-            getCoordinatesDataById(currentChanging);
-            $(".chooseAble>.areaInfo").each(function (){
-                $(this).removeClass("selected");
-            });
-            $(this).addClass("selected")
-            allowedSelected = true;
-
-
-
+            if(! busy){
+                $('.sector').remove();
+                currentChanging = $(this).attr('id');
+                console.log("Current id: " + currentChanging)
+                getCoordinatesDataById(currentChanging);
+                $(".chooseAble>.areaInfo").each(function (){
+                    $(this).removeClass("selected");
+                });
+                $(this).addClass("selected")
+                allowedSelected = true;
+            }
+            else {
+                alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+            }
         });
     });
 
@@ -286,64 +289,71 @@
 
 
     function getCoordinatesDataById(id){
-        $(".gotImg").attr("src", "img/loading.gif");
-        fetch("/getCoordinatesById?id=" + id, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: null,
-        })
-            .then((response) => {
-                response.text().then(function (data){
-
-                    //1001001
-                    currentData = JSON.parse(data);
-                    console.log("Error may be: " + data)
-                    if(currentData["newUrl"] == "error"){
-                        allowed = false;
-                        $('.gotImg').attr('src', 'img/disconnect.png')
-
-                        alert('Соединение с тепловизором не установлено.')
-                    }
-                    else if (currentData["newUrl"] == 'conError'){
-                        allowed = false;
-                        $('.gotImg').attr('src', 'img/disconnect.png')
-                        alert('Соединение с тепловизором не установлено.')
-                    }
-                    else if(currentData["tiID"] == "null"){
-                        allowed = false;
-                        $(".gotImg").attr("src", "img/notfound.png");
-                        alert("Координаты данной зоны не назначены");
-                    }
-                    else{
-
-                        if(currentData["focusing"] != null){
-                            $("#focusing").val(currentData["focusing"]);
-                        }
-                        if(currentData["horizontal"] != null) {
-                            $("#horizontal").val(currentData["horizontal"]);
-                        }
-                        if(currentData["vertical"] != null) {
-                            $("#vertical").val(currentData["vertical"]);
-                        }
-                        $(".gotImg").attr("src", currentData["newUrl"]);
-                        console.log(currentData["newUrl"])
-
-                        $(".active").removeClass("active");
-                        $("#" + currentData["tiID"]).addClass("active")
-
-                        let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
-                        console.log(areaDiv);
-                        $(".sector").remove();
-                        $(".gotImage").append(areaDiv);
-                    }
-
-                });
+        if( ! busy){
+            busy = true;
+            $(".gotImg").attr("src", "img/loading.gif");
+            fetch("/getCoordinatesById?id=" + id, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: null,
             })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+                .then((response) => {
+                    response.text().then(function (data){
+                        busy = false;
+                        //1001001
+                        currentData = JSON.parse(data);
+                        console.log("Error may be: " + data)
+                        if(currentData["newUrl"] == "error"){
+                            allowed = false;
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                            alert('Соединение с тепловизором не установлено.')
+                        }
+                        else if (currentData["newUrl"] == 'conError'){
+                            allowed = false;
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                            alert('Соединение с тепловизором не установлено.')
+                        }
+                        else if(currentData["tiID"] == "null"){
+                            allowed = false;
+                            $(".gotImg").attr("src", "img/notfound.png");
+                            alert("Координаты данной зоны не назначены");
+                        }
+                        else{
+
+                            if(currentData["focusing"] != null){
+                                $("#focusing").val(currentData["focusing"]);
+                            }
+                            if(currentData["horizontal"] != null) {
+                                $("#horizontal").val(currentData["horizontal"]);
+                            }
+                            if(currentData["vertical"] != null) {
+                                $("#vertical").val(currentData["vertical"]);
+                            }
+                            $(".gotImg").attr("src", currentData["newUrl"]);
+                            console.log(currentData["newUrl"])
+
+                            $(".active").removeClass("active");
+                            $("#" + currentData["tiID"]).addClass("active")
+
+                            let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
+                            console.log(areaDiv);
+                            $(".sector").remove();
+                            $(".gotImage").append(areaDiv);
+                        }
+
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    busy = false;
+                });
+        }
+        else{
+            alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+        }
+
     }
 
     $(".main").click(function (){
@@ -479,25 +489,26 @@
 
 
     function moveAndView(){
+        console.log(busy)
+        if(!busy){
+            busy = true;
+            console.log("setting busy to " + busy )
+            let bodyToGoto = {};
+            bodyToGoto["tiId"] = parseInt($(".active").attr('id'));
+            bodyToGoto["horizontal"] = parseFloat($('#horizontal').val())
+            bodyToGoto["vertical"] = parseFloat($('#vertical').val())
+            bodyToGoto["focusing"] = parseFloat($('#focusing').val())
 
-        busy = true;
-        console.log("setting busy to " + busy )
-        let bodyToGoto = {};
-        bodyToGoto["tiId"] = parseInt($(".active").attr('id'));
-        bodyToGoto["horizontal"] = parseFloat($('#horizontal').val())
-        bodyToGoto["vertical"] = parseFloat($('#vertical').val())
-        bodyToGoto["focusing"] = parseFloat($('#focusing').val())
 
+            console.log(JSON.stringify(bodyToGoto));
 
-        console.log(JSON.stringify(bodyToGoto));
-
-        fetch("/gotoAndGetImage", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(bodyToGoto),
-        })
+            fetch("/gotoAndGetImage", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyToGoto),
+            })
             .then((response) => {
                 response.text().then(function (data){
 
@@ -506,6 +517,7 @@
 
                     if(currentData["newUrl"] == 'error'){
                         allowed = false;
+                        busy = false;
                         moveAndView();
                     }
                     else if(currentData["newUrl"] == 'errorBusy'){
@@ -533,9 +545,9 @@
 
                         $(".sector").remove();
 
-                        busy = false;
                         console.log("setting busy to " + busy )
                     }
+                    busy = false;
 
                 });
             })
@@ -545,6 +557,10 @@
                 busy = false
                 console.log("setting busy to " + busy )
             })
+        }
+        else{
+            alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+        }
     }
 
     $('.change').each( function (){
@@ -560,12 +576,17 @@
     $('.nav-tabs>.nav-item').each(
         function () {
             $(this).click(function (){
-                $(".gotImg").attr("src", "img/loading.gif")
-                $(".sector").remove();
-                $('#horizontal').val(0)
-                $('#vertical').val(0)
-                $('#focusing').val(500)
-                moveAndView();
+                if(! busy){
+                    $(".gotImg").attr("src", "img/loading.gif")
+                    $(".sector").remove();
+                    $('#horizontal').val(0)
+                    $('#vertical').val(0)
+                    $('#focusing').val(500)
+                    moveAndView();
+                }
+                else{
+                    alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+                }
             })
         })
 
@@ -809,9 +830,11 @@
         });
     });
 
-    $(document).ready(function (){
-        setTimeout(moveAndView(), 1000)
-    });
+    $(document).ready(function() {
+        console.log(busy)
+        moveAndView()
+    })
+
 
 
 </script>
