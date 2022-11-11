@@ -3,6 +3,7 @@ package com.i4rt.temperaturecontrol.tasks;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.Measurement;
+import com.i4rt.temperaturecontrol.model.MeasurementData;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -41,7 +43,7 @@ public class CreateExcelReport {
         this.weatherMeasurementRepo = weatherMeasurementRepo;
     }
 
-    public String createMainSheet(Map<String, Object> preparedToSendData) throws IOException {
+    public String createMainSheet(Date beginningDate, Date endingDate) throws IOException {
 
         // создание главного эксель листа
         XSSFWorkbook book = new XSSFWorkbook();
@@ -97,7 +99,7 @@ public class CreateExcelReport {
         Integer index = 0;
         for (ControlObject controlObject : overheatedAreaList) {
 
-            List<Measurement> measurements = controlObject.getMeasurement();
+//            List<Measurement> measurements = controlObject.getMeasurement();
             index += 1;
             System.out.println("Area " + index + " of " + overheatedAreaList.size());
 
@@ -115,12 +117,14 @@ public class CreateExcelReport {
             int numCellValue = 1;
             int numCellWeather = 4;
 
-            ArrayList<Date> totalDates = (ArrayList<Date>) preparedToSendData.get("time");
+            ArrayList<Object> allData = getTotalValues(controlObject, weatherMeasurementRepo,
+                    measurementRepo, beginningDate, endingDate);
+            ArrayList<Date> totalDates = (ArrayList<Date>) allData.get(0);
+            Collections.sort(totalDates);
+            Map<Date, Object> preparedToSendData = (Map<Date, Object>) allData.get(1);
 
-            // index (0) - температуры тепловизора, index (1) - температуры метеостанции
-//            ArrayList<ArrayList<Double>> totalTemperatures = getTotalTemperatures(controlObject,
-//                    this.weatherMeasurementRepo, this.measurementRepo, totalDates, beginningDate, endingDate);
-            if(((ArrayList<Object>)preparedToSendData.get("weatherTemperature")).isEmpty()){
+
+            if(preparedToSendData.isEmpty()){
                 continue;
             }
             // вывод измерений на отдельный лист эксель
@@ -135,16 +139,14 @@ public class CreateExcelReport {
 
                 // столбец значений
                 Cell cellValue = rowInf.createCell(numCellValue);
-                if (((ArrayList<Object>) preparedToSendData.get("weatherTemperature")).get(i).getClass()
+                if ((preparedToSendData.get(totalDates.get(i))).getClass()
                         == WeatherMeasurement.class) cellValue.setBlank();
-                else cellValue.setCellValue(((ArrayList<Measurement>) preparedToSendData.get("weatherTemperature"))
-                        .get(i).getTemperature());
+                else cellValue.setCellValue(((Measurement) preparedToSendData.get(totalDates.get(i))).getTemperature());
 
                 Cell cellWeather = rowInf.createCell(numCellWeather);
-                if (((ArrayList<Object>) preparedToSendData.get("weatherTemperature")).get(i).getClass()
+                if ((preparedToSendData.get(totalDates.get(i))).getClass()
                         == Measurement.class) cellWeather.setBlank();
-                else cellWeather.setCellValue(((ArrayList<WeatherMeasurement>) preparedToSendData.get("weatherTemperature"))
-                        .get(i).getTemperature());
+                else cellWeather.setCellValue(((WeatherMeasurement) preparedToSendData.get(totalDates.get(i))).getTemperature());
 
             }
 
@@ -214,29 +216,55 @@ public class CreateExcelReport {
         return date;
     }
 
-    public static ArrayList<Date> getTotalDates(ControlObject controlObject,
-                                                WeatherMeasurementRepo weatherMeasurementRepo,
-                                                MeasurementRepo measurementRepo, Date beginningDate,
-                                                Date endingDate){
-        ArrayList<Measurement> measurements = measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(),
-                beginningDate, endingDate);
-        ArrayList<WeatherMeasurement> weatherMeasurements = weatherMeasurementRepo
-                .getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate);
+    public static ArrayList<Object> getTotalValues(ControlObject controlObject,
+                                                   WeatherMeasurementRepo weatherMeasurementRepo,
+                                                   MeasurementRepo measurementRepo, Date beginningDate,
+                                                   Date endingDate){
+        ArrayList<MeasurementData> measurements = new ArrayList<>();
+        measurements.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate));
+        measurements.addAll( measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(), beginningDate, endingDate));
 
-        // массив общих дат
+        Map<Date, Object> preparedToSendData = new HashMap<>();
         ArrayList<Date> totalDates = new ArrayList<>();
 
-        // добавляем даты измерений с тепловизора
-        for (Measurement measurement: measurements) totalDates.add(measurement.getDatetime());
+//        preparedToSendData.put("time", new ArrayList<Date>());
+//        preparedToSendData.put("weatherTemperature", new ArrayList<>());
 
-        // добавляем даты измерений с метеостанции
-        for (WeatherMeasurement weatherMeasurement: weatherMeasurements){
-            if (!totalDates.contains(weatherMeasurement.getDatetime())) totalDates.add(weatherMeasurement.getDatetime());
+        for(MeasurementData obj: measurements){
+            if(obj instanceof WeatherMeasurement){
+                WeatherMeasurement finObj = (WeatherMeasurement) obj;
+                totalDates.add(finObj.getDatetime());
+                preparedToSendData.put(finObj.getDatetime(), finObj);
+            }
+            else if(obj instanceof Measurement){
+                Measurement finObj = (Measurement) obj;
+                totalDates.add(finObj.getDatetime());
+                preparedToSendData.put(finObj.getDatetime(), finObj);
+            }
         }
 
-        Collections.sort(totalDates);
+        ArrayList<Object> results = new ArrayList<>();
+        results.add(totalDates);
+        results.add(preparedToSendData);
+//        ArrayList<Measurement> measurements = measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(),
+//                beginningDate, endingDate);
+//        ArrayList<WeatherMeasurement> weatherMeasurements = weatherMeasurementRepo
+//                .getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate);
+//
+//        // массив общих дат
+//        ArrayList<Date> totalDates = new ArrayList<>();
+//
+//        // добавляем даты измерений с тепловизора
+//        for (Measurement measurement: measurements) totalDates.add(measurement.getDatetime());
+//
+//        // добавляем даты измерений с метеостанции
+//        for (WeatherMeasurement weatherMeasurement: weatherMeasurements){
+//            if (!totalDates.contains(weatherMeasurement.getDatetime())) totalDates.add(weatherMeasurement.getDatetime());
+//        }
+//
+//        Collections.sort(totalDates);
 
-        return totalDates;
+        return results;
     }
 
     public static ArrayList<ArrayList<Double>> getTotalTemperatures(ControlObject controlObject,

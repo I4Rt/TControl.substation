@@ -54,35 +54,11 @@ public class ReportPageRestController {
             Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
             System.out.println("dates " + beginningDate + " ----> " + endingDate);
 
-            List<MeasurementData> results = new ArrayList<>();
-            results.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate));
-            results.addAll( measurementRepo.getMeasurementByDatetimeInRange(id, beginningDate, endingDate));
-
-            Map<String, Object> preparedToSendData = new HashMap<>();
-
-            preparedToSendData.put("time", new ArrayList<Date>());
-            preparedToSendData.put("weatherTemperature", new ArrayList<>());
-
-
-            for(MeasurementData obj: results){
-                if(obj instanceof WeatherMeasurement){
-                    WeatherMeasurement finObj = (WeatherMeasurement) obj;
-                    ((ArrayList<Date>)preparedToSendData.get("time")).add(finObj.getDatetime());
-
-                    ((ArrayList<WeatherMeasurement>)preparedToSendData.get("weatherTemperature")).add(finObj);
-                }
-                else if(obj instanceof Measurement){
-                    Measurement finObj = (Measurement) obj;
-                    ((ArrayList<Date>)preparedToSendData.get("time")).add(finObj.getDatetime());
-
-                    ((ArrayList<Measurement>)preparedToSendData.get("weatherTemperature")).add(finObj);
-                }
-                //System.out.println(weatherMeasurement.getId());
-            }
+//            System.out.println("\n\n\n" + results.get(1) + "\n\n\n");
 
             CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo,
                     this.thermalImagerRepo, this.userRepo, this.weatherMeasurementRepo);
-            name = createExcelReport.createMainSheet(preparedToSendData);
+            name = createExcelReport.createMainSheet(beginningDate, endingDate);
 
             result.put("reportName", "reports/" + name);
 
