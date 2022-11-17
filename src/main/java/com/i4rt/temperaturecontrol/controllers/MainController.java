@@ -1,6 +1,5 @@
 package com.i4rt.temperaturecontrol.controllers;
 
-import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
 import com.i4rt.temperaturecontrol.additional.UploadedImageCounter;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
@@ -10,19 +9,13 @@ import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import javax.xml.bind.SchemaOutputResolver;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 @Controller
@@ -210,7 +203,7 @@ public class MainController {
             model.addAttribute("message",  "Пользователь с таким логином существует");
         }
 
-        return "register";
+        return "registerPage";
     }
 
     @GetMapping("/login")

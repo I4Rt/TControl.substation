@@ -20,7 +20,7 @@ public class ConnectionHolder {
         try{
             httpClient.close();
         } catch (Exception e){
-            System.out.println("Close error" + e);
+            System.out.println("Close error " + e);
         }
         finally {
             connections.remove(httpClient);

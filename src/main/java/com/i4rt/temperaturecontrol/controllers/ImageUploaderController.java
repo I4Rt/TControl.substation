@@ -4,8 +4,11 @@ import com.i4rt.temperaturecontrol.additional.UploadedImageCounter;
 import com.i4rt.temperaturecontrol.basic.FileUploadUtil;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
+import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
 import com.i4rt.temperaturecontrol.model.ControlObject;
+import com.i4rt.temperaturecontrol.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +25,13 @@ public class ImageUploaderController {
     @Autowired
     private ControlObjectRepo controlObjectRepo;
     @Autowired
+    private final UserRepo userRepo;
+    @Autowired
     private final MeasurementRepo measurementRepo;
 
-    public ImageUploaderController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo) {
+    public ImageUploaderController(ControlObjectRepo controlObjectRepo, UserRepo userRepo, MeasurementRepo measurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
+        this.userRepo = userRepo;
         this.measurementRepo = measurementRepo;
     }
 
@@ -46,6 +52,19 @@ public class ImageUploaderController {
         }
         model.addAttribute("src", "\"img/bg/map"+UploadedImageCounter.getCurrentCounter()+".png\"");
 
+        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        model.addAttribute("user", user);
+
+        user.setThermalImagerGrabbed(false);
+
+        userRepo.save(user);
+
+        if(user.getRole().equals("ADMIN")){
+            model.addAttribute("adderClass", "");
+        }
+        else{
+            model.addAttribute("adderClass", "hidden");
+        }
         return "mainWindow";
     }
 

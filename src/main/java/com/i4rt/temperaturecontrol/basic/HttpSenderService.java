@@ -94,6 +94,10 @@ public class HttpSenderService {
     public static Map<String , String> getMapFromXMLString(String StringXML){
 
         HashMap<String, String> valuesMap = new HashMap<>();
+        if(StringXML.equals("{}") | StringXML.equals("")){
+            return valuesMap;
+        }
+
         try {
             Document xmlDoc = loadXMLFromString(StringXML);
             NodeList root = (NodeList) xmlDoc.getDocumentElement();

@@ -211,6 +211,7 @@ public class ThermalImager {
                 answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
                 System.out.println("counter: " + tryCounter);
                 Thread.sleep(200);
+                System.out.println(answer);
                 parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
                 System.out.println(Double.parseDouble(parsedAnswer.get("elevation")) + " " + vertical / 10);
@@ -291,7 +292,7 @@ public class ThermalImager {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);;
             return false;
         }
 

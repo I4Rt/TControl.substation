@@ -28,9 +28,14 @@ public class ControlObject implements Comparable<ControlObject>{
     @Column(unique = true)
     private String name;
 
+    @Column
+    private String voltageMeasurementChannel;
 
     @OneToMany(mappedBy = "controlObject", fetch = FetchType.EAGER)
     private List<Measurement> measurement;
+
+    @OneToMany(mappedBy = "controlObject")//, fetch = FetchType.EAGER)
+    private List<VoltageMeasurement> voltageMeasurements;
 
     @Column
     private String temperatureClass;

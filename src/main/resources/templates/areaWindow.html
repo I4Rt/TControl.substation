@@ -544,15 +544,19 @@
             })
             .then((response) => {
                 response.text().then(function (data){
-                    let temp = JSON.parse(data);
-
-
-
-                    if(temp["message"].length < 20){
-                        currentData["temperatureClass"] = temp["temperatureClass"];
-                        updatePageStatisticsTemperature();
+                    if(data[0] == '<'){
+                        window.location.replace("403");
                     }
-                    alert(temp["message"])
+                    else{
+                        let temp = JSON.parse(data);
+
+                        if(temp["message"].length < 20){
+                            currentData["temperatureClass"] = temp["temperatureClass"];
+                            updatePageStatisticsTemperature();
+                        }
+                        alert(temp["message"])
+                    }
+
                 });
 
             })
