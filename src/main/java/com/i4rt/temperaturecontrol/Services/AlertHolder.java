@@ -30,9 +30,11 @@ public class AlertHolder {
     }
 
     public static AlertHolder getInstance() {
+
         if(instance == null){
             instance = new AlertHolder();
         }
+        System.out.println("alerts: " + instance);
         return instance;
     }
 }

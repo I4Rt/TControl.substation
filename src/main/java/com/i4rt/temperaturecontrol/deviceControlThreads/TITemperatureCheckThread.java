@@ -158,18 +158,17 @@ public class TITemperatureCheckThread extends Thread{
                                 System.out.println("Configuring area error");
                             }
                         } else {
+                            System.out.println("passing");
                             continue;
                         }
                     }
                     //Thread.sleep(5000);
                 }
-                thermalImager.setIsBusy(false);
-
-                thermalImagerRepo.save(thermalImager);
             } else {
                 System.out.println("Passing: Thermal imager with current id is not exist");
             }
-
+            thermalImager.setIsBusy(false);
+            thermalImagerRepo.save(thermalImager);
             switch (thermalImager.getId().toString()){
                 case "1":
                     alertHolder.setFirstTIError(false);
@@ -184,10 +183,13 @@ public class TITemperatureCheckThread extends Thread{
                     alertHolder.setFourthTIError(false);
                     break;
             }
+            System.out.println(alertHolder);
         }
         catch (Exception e){
+            thermalImager.setIsBusy(false);
+            thermalImagerRepo.save(thermalImager);
             System.out.println("EXCEPTION: " + e);
-            switch (thermalImager.getId().toString()){
+            switch (thermalImagerID.toString()){
                 case "1":
                     alertHolder.setFirstTIError(true);
                     break;
@@ -201,7 +203,7 @@ public class TITemperatureCheckThread extends Thread{
                     alertHolder.setFourthTIError(true);
                     break;
             }
-
+            System.out.println(alertHolder);
             thermalImager.setIsBusy(false);
             thermalImagerRepo.save(thermalImager);
         }

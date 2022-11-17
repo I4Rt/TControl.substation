@@ -88,6 +88,7 @@ public class ThermalImagersMainControlThread extends Thread {
                     //проверка на занятость
                     if( !thermalImagers.get(i).getIsBusy() ){
                         System.out.println("Starting thermal imager thread");
+                        System.out.println("parent thread cur: " + thermalImagers.get(i).getId());
                         TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
 
                         tiTemperatureCheckThread.start();

@@ -17,10 +17,15 @@ public class ConnectionHolder {
     }
 
     public static void removeConnection(CloseableHttpClient httpClient) throws IOException {
-
-        httpClient.close();
-        connections.remove(httpClient);
-        System.out.println("connections size: " + connections.size());
+        try{
+            httpClient.close();
+        } catch (Exception e){
+            System.out.println("Close error" + e);
+        }
+        finally {
+            connections.remove(httpClient);
+            System.out.println("connections size: " + connections.size());
+        }
     }
 
     public static void removeAllConnection() throws IOException {

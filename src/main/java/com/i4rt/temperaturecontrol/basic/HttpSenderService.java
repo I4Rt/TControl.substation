@@ -67,13 +67,14 @@ public class HttpSenderService {
 
 
 
-    public static HttpSenderService setInstance(String IP, Integer port, String realm, String nonce){
-        if(instance == null){
-            instance = new HttpSenderService(realm, nonce);
-        }
+    public static HttpSenderService setInstance(String IP, Integer port, String realm, String nonce){ // !!!
+        HttpSenderService newConnections = new HttpSenderService(realm, nonce);
+//        if(instance == null){
+//            instance = new HttpSenderService(realm, nonce);
+//        }
 
-        instance.targetHost = new HttpHost(IP, port, "http");
-        return instance;                                      //!!!
+        newConnections.targetHost = new HttpHost(IP, port, "http");
+        return newConnections;                                      //!!!
     }
 
     public static HttpSenderService getHttpSenderService(String IP, Integer port, String realm, String nonce){
@@ -113,109 +114,127 @@ public class HttpSenderService {
     }
 
     public String sendGetRequest(String request) throws IOException {
+        String result = "";
+        try {
+            HttpGet httpget = new HttpGet(request);
 
-        HttpGet httpget = new HttpGet(request);
 
-        if(httpClient == null){
+            CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
+            HttpEntity entity = response.getEntity();
+            result = EntityUtils.toString(entity, "UTF-8");
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+        finally {
+            ConnectionHolder.removeConnection(httpClient);
             httpClient = HttpClients.createDefault();
             ConnectionHolder.addConnection(httpClient);
+            return result;
         }
-        CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
-        HttpEntity entity = response.getEntity();
-
-        ConnectionHolder.removeConnection(httpClient);
-        httpClient = HttpClients.createDefault();
-        ConnectionHolder.addConnection(httpClient);
-
-        return EntityUtils.toString(entity, "UTF-8");
     }
 
     public String sendPutRequest(String request, String body) throws IOException {
-
-        HttpPut httpPut = new HttpPut(request);
-        httpPut.setHeader("Content-type", "application/xml");
-        CloseableHttpResponse response;
-        if(httpClient == null){
-            httpClient = HttpClients.createDefault();
-            ConnectionHolder.addConnection(httpClient);
-        }
+        String result = "";
         try{
+            HttpPut httpPut = new HttpPut(request);
+            httpPut.setHeader("Content-type", "application/xml");
+            CloseableHttpResponse response;
+
+
             StringEntity stringEntity = new StringEntity(body);
             httpPut.getRequestLine();
             httpPut.setEntity(stringEntity);
 
             response = httpClient.execute(targetHost , httpPut, context);
-        } catch (Exception e){
-            throw new RuntimeException(e);
+
+            HttpEntity entity = response.getEntity();
+            result = EntityUtils.toString(entity, "UTF-8");
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+        finally {
+            ConnectionHolder.removeConnection(httpClient);
+            httpClient = HttpClients.createDefault();
+            ConnectionHolder.addConnection(httpClient);
+            return result;
         }
 
 
-        HttpEntity entity = response.getEntity();
 
-        ConnectionHolder.removeConnection(httpClient);
-        httpClient = HttpClients.createDefault();
-        ConnectionHolder.addConnection(httpClient);
-        return EntityUtils.toString(entity, "UTF-8");
     }
 
 
     public String getImage(String location, String request) throws IOException {
+        String result = "";
         //"/ISAPI/Streaming/channels/2/picture"
-        HttpGet httpget = new HttpGet(request);
-        System.out.println("connection " + httpClient);
-        if(httpClient == null){
+        try{
+            HttpGet httpget = new HttpGet(request);
+            System.out.println("connection " + httpClient);
+
+            CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
+            //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
+
+            HttpEntity entity = response.getEntity();
+            File prev_file = new File(location, "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg");
+            prev_file.delete();
+
+            File file = new File(location, "got_pic"+ GotPicImageCounter.increaseCounter() +".jpg");
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+            FileOutputStream fileOS  = new FileOutputStream(file);
+            entity.writeTo(fileOS);
+            entity.consumeContent();
+            fileOS.flush();
+            fileOS.close();
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+        finally {
+            ConnectionHolder.removeConnection(httpClient);
             httpClient = HttpClients.createDefault();
             ConnectionHolder.addConnection(httpClient);
+            return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
         }
-        CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
-        //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
-        HttpEntity entity = response.getEntity();
-        File prev_file = new File(location, "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg");
-        prev_file.delete();
-
-        File file = new File(location, "got_pic"+ GotPicImageCounter.increaseCounter() +".jpg");
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-        FileOutputStream fileOS  = new FileOutputStream(file);
-        entity.writeTo(fileOS);
-        entity.consumeContent();
-        fileOS.flush();
-        fileOS.close();
-
-        ConnectionHolder.removeConnection(httpClient);
-        httpClient = HttpClients.createDefault();
-        ConnectionHolder.addConnection(httpClient);
-        return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
     }
 
     public String saveImage(String location, String request, String name) throws IOException {
-        //"/ISAPI/Streaming/channels/2/picture"
-        HttpGet httpget = new HttpGet(request);
-        if(httpClient == null){
+        String result = "";
+
+        try{
+            //"/ISAPI/Streaming/channels/2/picture"
+            HttpGet httpget = new HttpGet(request);
+
+            System.out.println("connection " + httpClient);
+            CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
+            //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
+
+            HttpEntity entity = response.getEntity();
+
+
+            File file = new File(location,  name +".jpg");
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+            FileOutputStream fileOS  = new FileOutputStream(file);
+            entity.writeTo(fileOS);
+            entity.consumeContent();
+            fileOS.flush();
+            fileOS.close();
+
+
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+        finally {
+            ConnectionHolder.removeConnection(httpClient);
             httpClient = HttpClients.createDefault();
             ConnectionHolder.addConnection(httpClient);
+            return name +".jpg";
         }
-        System.out.println("connection " + httpClient);
-        CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
-        //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
-
-        HttpEntity entity = response.getEntity();
-
-
-        File file = new File(location,  name +".jpg");
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-        FileOutputStream fileOS  = new FileOutputStream(file);
-        entity.writeTo(fileOS);
-        entity.consumeContent();
-        fileOS.flush();
-        fileOS.close();
-
-        ConnectionHolder.removeConnection(httpClient);
-        httpClient = HttpClients.createDefault();
-        ConnectionHolder.addConnection(httpClient);
-        return name +".jpg";
     }
 
 

@@ -109,7 +109,7 @@ public class WeatherStation {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
         }
 
         return value;
