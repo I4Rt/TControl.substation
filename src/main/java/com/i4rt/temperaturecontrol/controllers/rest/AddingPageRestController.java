@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.bind.SchemaOutputResolver;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -125,7 +126,6 @@ public class AddingPageRestController {
 
         if(ti.getIsBusy()){
             data.put("newUrl", "error");
-
         }
         else{
             try{
@@ -138,7 +138,30 @@ public class AddingPageRestController {
             }
         }
 
-
+//        while(ti.getIsBusy()){
+//            try{
+//                System.out.println("Waiting for TI finish its tasks");
+//                Thread.sleep(500);
+//            }
+//            catch (Exception e){
+//                System.out.println("Goto and Get Image Error Sleep: " + e);
+//                data.put("newUrl", "error");
+//                String jsonStringToSend = JSONObject.valueToString(data);
+//                return jsonStringToSend;
+//            }
+//        }
+//
+//        try{
+//            String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
+//            System.out.println(newUrl);
+//            data.put("newUrl", newUrl);
+//        }
+//        catch (Exception e){
+//            data.put("newUrl", "conError");
+//        }
+//
+//
+//
         String jsonStringToSend = JSONObject.valueToString(data);
 
         return jsonStringToSend;
@@ -159,7 +182,7 @@ public class AddingPageRestController {
 
         result.put("focus", ti.setAutoFocus());
 
-        HttpSenderService httpSenderService = HttpSenderService.setInstance(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
+        HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
 
         httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
 

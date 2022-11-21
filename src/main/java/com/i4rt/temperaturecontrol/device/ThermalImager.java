@@ -49,6 +49,8 @@ public class ThermalImager {
     private Boolean isBusy;
 
 
+
+
     @OneToMany(mappedBy = "thermalImager", fetch = FetchType.EAGER)
     private List<ControlObject> controlObjectsArray;
 
@@ -292,7 +294,7 @@ public class ThermalImager {
             }
 
         } catch (Exception e) {
-            System.out.println(e);;
+            System.out.println(e);
             return false;
         }
 

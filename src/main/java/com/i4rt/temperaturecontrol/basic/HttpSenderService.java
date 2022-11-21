@@ -31,34 +31,35 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 public class HttpSenderService {
 
-    public static HttpSenderService instance;
+//    public static HttpSenderService instance;
 
 
 
-    private HttpHost targetHost = new HttpHost("192.168.1.64", 80, "http");
+    private HttpHost targetHost;
     private final BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
     private final BasicAuthCache authCache = new BasicAuthCache();
     // Add AuthCache to the execution context
     private final HttpClientContext context = HttpClientContext.create();
     private CloseableHttpClient httpClient;
-    
+
 
     public HttpSenderService(HttpHost targetHost, CloseableHttpClient httpClient) {
         this.targetHost = targetHost;
         this.httpClient = httpClient;
     }
 
-    public HttpSenderService(String realm, String nonce){
+    public HttpSenderService(String IP, Integer port, String realm, String nonce){
+        this.targetHost = new HttpHost(IP, port, "http");
 
-        credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "ask226226"));
+        this.credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "ask226226"));
 
         DigestScheme digestAuth = new DigestScheme();
         digestAuth.overrideParamter("realm", realm);
         digestAuth.overrideParamter("nonce", nonce);
-        authCache.put(targetHost, digestAuth);
+        this.authCache.put(targetHost, digestAuth);
 
-        context.setAuthCache(authCache);
-        context.setCredentialsProvider(credsProvider);
+        this.context.setAuthCache(authCache);
+        this.context.setCredentialsProvider(credsProvider);
     }
 
 
@@ -66,7 +67,7 @@ public class HttpSenderService {
 
 
 
-
+/*
     public static HttpSenderService setInstance(String IP, Integer port, String realm, String nonce){ // !!!
         HttpSenderService newConnections = new HttpSenderService(realm, nonce);
 //        if(instance == null){
@@ -77,10 +78,12 @@ public class HttpSenderService {
         return newConnections;                                      //!!!
     }
 
+*/
+
     public static HttpSenderService getHttpSenderService(String IP, Integer port, String realm, String nonce){
-        HttpSenderService hss = new HttpSenderService(realm, nonce);
-        hss.targetHost = new HttpHost(IP, port, "http");
-        
+        HttpSenderService hss = new HttpSenderService(IP, port, realm, nonce);
+        // hss.targetHost = new HttpHost(IP, port, "http"); // not necessary after updating constructor
+
         return hss;
     }
 
@@ -122,18 +125,19 @@ public class HttpSenderService {
         try {
             HttpGet httpget = new HttpGet(request);
 
-
+            this.httpClient = HttpClients.createDefault();
+            System.out.println("after creating con is  "  + httpClient);
+            ConnectionHolder.addConnection(httpClient);
             CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
             HttpEntity entity = response.getEntity();
             result = EntityUtils.toString(entity, "UTF-8");
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println("http:GET Request Error: " + e);
         }
         finally {
+            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
-            httpClient = HttpClients.createDefault();
-            ConnectionHolder.addConnection(httpClient);
             return result;
         }
     }
@@ -149,19 +153,20 @@ public class HttpSenderService {
             StringEntity stringEntity = new StringEntity(body);
             httpPut.getRequestLine();
             httpPut.setEntity(stringEntity);
-
+            this.httpClient = HttpClients.createDefault();
+            System.out.println("after creating con is  "  + httpClient);
+            ConnectionHolder.addConnection(httpClient);
             response = httpClient.execute(targetHost , httpPut, context);
 
             HttpEntity entity = response.getEntity();
             result = EntityUtils.toString(entity, "UTF-8");
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println("http:PUT Request Error: " + e);
         }
         finally {
+            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
-            httpClient = HttpClients.createDefault();
-            ConnectionHolder.addConnection(httpClient);
             return result;
         }
 
@@ -175,8 +180,11 @@ public class HttpSenderService {
         //"/ISAPI/Streaming/channels/2/picture"
         try{
             HttpGet httpget = new HttpGet(request);
-            System.out.println("connection " + httpClient);
+            //System.out.println("connection " + httpClient);
 
+            this.httpClient = HttpClients.createDefault();
+            System.out.println("after creating con is  "  + httpClient);
+            ConnectionHolder.addConnection(httpClient);
             CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
             //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
@@ -194,12 +202,12 @@ public class HttpSenderService {
             fileOS.close();
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println("http:Get Image error: " + e);
         }
         finally {
+            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
-            httpClient = HttpClients.createDefault();
-            ConnectionHolder.addConnection(httpClient);
+
             return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
         }
 
@@ -212,7 +220,10 @@ public class HttpSenderService {
             //"/ISAPI/Streaming/channels/2/picture"
             HttpGet httpget = new HttpGet(request);
 
-            System.out.println("connection " + httpClient);
+            //System.out.println("connection " + httpClient);
+            this.httpClient = HttpClients.createDefault();
+            System.out.println("after creating con is  "  + httpClient);
+            ConnectionHolder.addConnection(httpClient);
             CloseableHttpResponse response = httpClient.execute(targetHost, httpget, context);
             //System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img"
 
@@ -231,17 +242,17 @@ public class HttpSenderService {
 
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println("http:Save Image Error: " + e);
         }
         finally {
+            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
-            httpClient = HttpClients.createDefault();
-            ConnectionHolder.addConnection(httpClient);
+
             return name +".jpg";
         }
     }
 
-
+/*
     @Override
     public HttpSenderService clone() {
         try {
@@ -250,4 +261,5 @@ public class HttpSenderService {
             return new HttpSenderService(this.targetHost, this.httpClient);
         }
     }
+ */
 }
