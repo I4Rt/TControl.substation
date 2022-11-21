@@ -48,6 +48,9 @@ public class ThermalImager {
     @Column
     private Boolean isBusy;
 
+    @Column
+    private Boolean needReboot;
+
 
 
 
@@ -486,6 +489,20 @@ public class ThermalImager {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    public String reboot(){
+        try {
+            this.needReboot = false;
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
+            System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absolute", null));
+            //ISAPI/System/reboot
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return "conError";
+        }
+        return "ok";
     }
 
 

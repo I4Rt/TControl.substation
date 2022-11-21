@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -27,6 +29,9 @@ public class ThermalImagersMainControlThread extends Thread {
     private ThermalImagerRepo thermalImagerRepo;
 
     private UserRepo userRepo;
+
+    private final Integer maxChildThreadsCountBeforeReboot = 1000;
+    private HashMap<Long, Integer> curChildThreadsCount;
 
 
 
@@ -61,11 +66,18 @@ public class ThermalImagersMainControlThread extends Thread {
     @SneakyThrows
     public void run(){
 
+        curChildThreadsCount = new HashMap<>();
+
+
         for(ThermalImager ti : thermalImagerRepo.findAll()){
-            System.out.println("set thermal imager");
             ti.setIsBusy(false);
+            ti.setNeedReboot(true);
             thermalImagerRepo.save(ti);
+
+            curChildThreadsCount.put(ti.getId(), 0);
         }
+
+
 
         for(User u : userRepo.findAll()){
             System.out.println("set user");
@@ -87,23 +99,34 @@ public class ThermalImagersMainControlThread extends Thread {
                 for(Integer i = 0; i < thermalImagers.size(); i++){
                     //проверка на занятость
                     if( !thermalImagers.get(i).getIsBusy() ){
-                        System.out.println("Starting thermal imager thread");
-                        System.out.println("parent thread cur: " + thermalImagers.get(i).getId());
-                        TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
+                        curChildThreadsCount.merge(thermalImagers.get(i).getId(), 1, Integer::sum);
+                        if(thermalImagers.get(i).getNeedReboot()){
+                            System.out.println("rebooting" + thermalImagers.get(i).getId());
+                            thermalImagers.get(i).reboot();
 
-                        tiTemperatureCheckThread.start();
+                        }
+                        else{
+                            System.out.println("Starting thermal imager thread");
+                            System.out.println("parent thread cur: " + thermalImagers.get(i).getId());
+                            TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
 
-                        thermalImagers.get(i).setIsBusy(true);
+                            tiTemperatureCheckThread.start();
 
+                            thermalImagers.get(i).setIsBusy(true);
+
+                            if(curChildThreadsCount.get(thermalImagers.get(i).getId()) >= maxChildThreadsCountBeforeReboot){
+                                System.out.println("set need reboot ti" + thermalImagers.get(i).getId());
+                                thermalImagers.get(i).setNeedReboot(true);
+                                curChildThreadsCount.put(thermalImagers.get(i).getId(), 0);
+                            }
+                        }
                         thermalImagerRepo.save(thermalImagers.get(i));
-
                     }
-
-
+                    else{
+                        Thread.sleep(500);
+                    }
                 }
             }
-
         }
-
     }
 }
