@@ -26,8 +26,9 @@ public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
     @Query(nativeQuery = true, value="SELECT * FROM measurement where control_object_id = :searchId order by measurement_id desc limit :limit")
     ArrayList<Measurement> getMeasurementByAreaId(@Param("searchId") Long searchId, @Param("limit") Integer limit);                               // Переписать поле на datetime!
 
-    @Query(nativeQuery = true, value ="SELECT * FROM measurement where control_object_id = :searchId and temperature >= :dangerTemp order by measurement_id")
-    ArrayList<Measurement> getOverheatingMeasurement(@Param("searchId") Long searchId, @Param("dangerTemp") Double dangerTemp);
+    @Query(nativeQuery = true, value ="SELECT * FROM measurement where control_object_id = :searchId and datetime >= :begin and datetime <= :end and temperature >= :dangerTemp order by measurement_id")
+    ArrayList<Measurement> getOverheatingMeasurement(@Param("searchId") Long searchId, @Param("dangerTemp") Double dangerTemp, @Param("begin") Date begin,
+                                                     @Param("end") Date end);
 
     @Modifying
     @Transactional

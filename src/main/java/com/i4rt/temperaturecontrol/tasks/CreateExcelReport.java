@@ -71,6 +71,8 @@ public class CreateExcelReport {
 
         ArrayList<ControlObject> overheatedAreaList = new ArrayList<>();
 
+        System.out.println("\nСоздание листа\n");
+
         // вывод всех подконтрольных областей и задание им стиля
         for (int i = 0; i < rowSize + 1; i++) {
             Row row = sheet.createRow(i);
@@ -86,7 +88,7 @@ public class CreateExcelReport {
                 //проверка на перегретость
 //                List<Measurement> measurements = controlObject.getMeasurement();
                 if (!measurementRepo.getOverheatingMeasurement(controlObject.getId(),
-                        (Double) controlObject.getWarningTemp()).isEmpty()) overheating = true;
+                        (Double) controlObject.getWarningTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
 
                 if (!overheating) cell.setCellStyle(greenStyle);
                 else {
@@ -96,9 +98,11 @@ public class CreateExcelReport {
                 cell.setCellValue(controlObjects.get(j).getName());
             }
         }
+
+        System.out.println("\nВывод областей\n");
+
         Integer index = 0;
         for (ControlObject controlObject : overheatedAreaList) {
-
 //            List<Measurement> measurements = controlObject.getMeasurement();
             index += 1;
             System.out.println("Area " + index + " of " + overheatedAreaList.size());
@@ -117,6 +121,8 @@ public class CreateExcelReport {
             int numCellValue = 1;
             int numCellWeather = 4;
 
+            System.out.println("\nGet total values\n");
+
             ArrayList<Object> allData = getTotalValues(controlObject, weatherMeasurementRepo,
                     measurementRepo, beginningDate, endingDate);
             ArrayList<Date> totalDates = (ArrayList<Date>) allData.get(0);
@@ -127,28 +133,71 @@ public class CreateExcelReport {
             if(preparedToSendData.isEmpty()){
                 continue;
             }
+
+            System.out.println("\nПеред выводом измерений на отдельные листы\n");
+
             // вывод измерений на отдельный лист эксель
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(totalDates.get(0));
+            cal.add(Calendar.MINUTE, 1);
+            Date datePlusMinute = cal.getTime();
+
+            ArrayList<Date> minuteDates = new ArrayList<>();
+            int rowCount = 2;
+
             for (int i = 0; i < totalDates.size(); i++) {
-                Row rowInf = cellSheet.createRow(i + 2);
+                if (totalDates.get(i).equals(datePlusMinute) || totalDates.get(i).after(datePlusMinute)){
+                    rowCount++;
+                    Double weatherTemp = 0.0;
+                    Double temp = 0.0;
+                    Double maxWeatherTemp = -273.0;
+                    Double maxTemp = -273.0;
 
-                // столбец дат
-                Cell cellDate = rowInf.createCell(numCellDate);
-                cellDate.setCellStyle(dateStyle);
-                cellDate.setCellValue(totalDates.get(i));
-                cellSheet.autoSizeColumn(numCellDate);
+                    int weatherCount = 0;
+                    int thermalCount = 0;
+                    for (int j = 0; j < minuteDates.size(); j++){
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement){
+                            Double temperature = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+                            System.out.println("w: " + temperature);
+                            weatherTemp += temperature;
+                            weatherCount++;
+                            if (temperature >= maxWeatherTemp) maxWeatherTemp = temperature;
+                        }
+                        else if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement){
+                            Double temperature = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+                            System.out.println("t: " + temperature);
+                            temp += temperature;
+                            thermalCount++;
+                            if (temperature >= maxTemp) maxTemp = temperature;
+                        }
+                    }
+                    Row rowInf = cellSheet.createRow(rowCount);
 
-                // столбец значений
-                Cell cellValue = rowInf.createCell(numCellValue);
-                if ((preparedToSendData.get(totalDates.get(i))).getClass()
-                        == WeatherMeasurement.class) cellValue.setBlank();
-                else cellValue.setCellValue(((Measurement) preparedToSendData.get(totalDates.get(i))).getTemperature());
+                    Cell cellDate = rowInf.createCell(numCellDate);
+                    cellDate.setCellStyle(dateStyle);
+                    cellDate.setCellValue(minuteDates.get(0));
+                    cellSheet.autoSizeColumn(numCellDate);
 
-                Cell cellWeather = rowInf.createCell(numCellWeather);
-                if ((preparedToSendData.get(totalDates.get(i))).getClass()
-                        == Measurement.class) cellWeather.setBlank();
-                else cellWeather.setCellValue(((WeatherMeasurement) preparedToSendData.get(totalDates.get(i))).getTemperature());
+                    Cell cellValue = rowInf.createCell(numCellValue);
+                    if (thermalCount != 0) cellValue.setCellValue(temp/thermalCount);
+                    else cellValue.setBlank();
 
+                    Cell cellWeather = rowInf.createCell(numCellWeather);
+                    if (weatherCount != 0) cellWeather.setCellValue(weatherTemp/weatherCount);
+                    else cellWeather.setBlank();
+
+                    cal.setTime(totalDates.get(i));
+                    cal.add(Calendar.MINUTE, 1);
+                    datePlusMinute = cal.getTime();
+
+                    minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()-1));
+                    System.out.println(minuteDates.toString());
+                }
+
+                minuteDates.add(totalDates.get(i));
             }
+
+            System.out.println("\nПеред перегретыми точками\n");
 
             // информация по перегретым точкам на главном эксель листе
             Row row = sheet.createRow(2 + rowSize + 26 * overheatedAreaList.indexOf(controlObject));
@@ -168,10 +217,10 @@ public class CreateExcelReport {
                     0, 13, controlObject.getName());
             XDDFLineChartData data = createData(chart);
 
-            createDataSource(cellSheet, 2, totalDates.size()+1, numCellDate, numCellDate, 2, totalDates.size()+1,
+            createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
                     numCellValue, numCellValue, "Область " + controlObject.getName(), data);
 
-            createDataSource(cellSheet, 2, totalDates.size()+1, numCellDate, numCellDate, 2, totalDates.size()+1,
+            createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
                     numCellWeather, numCellWeather, "Температура воздуха", data);
 
             // пропуски соединяются линией
@@ -186,7 +235,7 @@ public class CreateExcelReport {
             plotArea.getValAxArray()[0].addNewMajorGridlines();
 
             ArrayList<Measurement> overheatingMeasurements = measurementRepo.getOverheatingMeasurement(
-                    controlObject.getId(), (Double) controlObject.getWarningTemp());
+                    controlObject.getId(), (Double) controlObject.getWarningTemp(), beginningDate, endingDate);
             String info = "Время превышения температур: ";
             StringBuilder sb = new StringBuilder(info);
             ArrayList<String> uniqueDates = new ArrayList<>();
@@ -204,6 +253,8 @@ public class CreateExcelReport {
                     "За выбранный период в области " + controlObject.getName() + " превышения температуры наблюдалось.");
             sheet.createRow(tempBorders.getRowNum() + 23).createCell(0).setCellValue(sb.toString());
         }
+
+        System.out.println("\nОтчет закончен\n");
 
         // создание файла отчета
         String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".xlsx";
