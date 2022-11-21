@@ -28,7 +28,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception{
         http.authorizeHttpRequests((requests) -> requests
 
-                .antMatchers("/adding", "/saveArea", "/register", "/registerUser").hasAnyAuthority("ADMIN")
+                .antMatchers("/adding", "/saveArea", "/register", "/registerUser", "/newArea",
+                        "/changeCoordinates", "/deleteArea").hasAnyAuthority("ADMIN")
                 .antMatchers("/main", "/saveArea", "/area", "/adding").authenticated()
                 .anyRequest().authenticated()
             )
