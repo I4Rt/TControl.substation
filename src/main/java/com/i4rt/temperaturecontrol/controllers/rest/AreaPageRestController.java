@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.basic.FolderManager;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.WeatherMeasurementRepo;
@@ -36,6 +37,7 @@ public class AreaPageRestController {
     //{"id": 1, "name": "Зона 1", "warningTemp": 60, "dangerTemp": 120}
     @RequestMapping(value = "saveArea", method = RequestMethod.POST)
     public String addingAreaPage(@RequestBody String dataJson){
+        FolderManager folderManager = new FolderManager(this.controlObjectRepo);
         System.out.println("saving");
         System.out.println(dataJson);
         Map<String, String> result = new HashMap<>();
@@ -53,7 +55,7 @@ public class AreaPageRestController {
             if(! data.get("id").equals(null)){
                 if(!(controlObjectRepo.findById(data.getLong("id")).isEmpty())){
                     curControlObject = controlObjectRepo.getById(data.getLong("id"));
-
+                    if(!curControlObject.getName().equals(data.getString("name"))) folderManager.renameFolders(curControlObject, data.getString("name"));
                     if(! measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature().equals(null)){
                         curControlObject.setName(data.getString("name"));
                         curControlObject.setWarningTemp(data.getDouble("warningTemp"));
