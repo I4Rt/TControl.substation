@@ -2,14 +2,11 @@ package com.i4rt.temperaturecontrol.model;
 
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import lombok.*;
-import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.Proxy;
 import org.json.JSONObject;
 
 
 import javax.persistence.*;
-import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -34,8 +31,6 @@ public class ControlObject implements Comparable<ControlObject>{
     @OneToMany(mappedBy = "controlObject", fetch = FetchType.EAGER)
     private List<Measurement> measurement;
 
-    @OneToMany(mappedBy = "controlObject")//, fetch = FetchType.EAGER)
-    private List<VoltageMeasurement> voltageMeasurements;
 
     @Column
     private String temperatureClass;

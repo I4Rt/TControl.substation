@@ -1,6 +1,8 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
+import com.i4rt.temperaturecontrol.deviceControlThreads.MIPControlThread;
+import com.i4rt.temperaturecontrol.deviceControlThreads.MIPSaver;
 import com.i4rt.temperaturecontrol.deviceControlThreads.ThermalImagersMainControlThread;
 import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThread;
 import com.i4rt.temperaturecontrol.model.ControlObject;
@@ -25,14 +27,17 @@ public class MainPageRestController {
     private final UserRepo userRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
+    @Autowired
+    private final MIPMeasurementRepo mipMeasurementRepo;
 
-    public MainPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
+    public MainPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
 
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
+        this.mipMeasurementRepo = mipMeasurementRepo;
 
         ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo, weatherMeasurementRepo);
 
@@ -44,12 +49,20 @@ public class MainPageRestController {
 
         weatherStationControlThread.start();
 
+        MIPControlThread mipControlThread = new MIPControlThread();
+        mipControlThread.start();
+
+        MIPSaver mipSaver = new MIPSaver(this.mipMeasurementRepo);
+        mipSaver.run();
+
+
         Calendar prevCalendar = Calendar.getInstance();
         prevCalendar.add(Calendar.DAY_OF_MONTH, -15);
 
         System.out.println(prevCalendar);
         Executor ex = new Executor(0,0,0, new DeleteCreateFolderTask(), "daily");
         ex.start();
+
     }
 
     //{'id': id:Long, 'x': x:Integer, 'y': y:Integer, }

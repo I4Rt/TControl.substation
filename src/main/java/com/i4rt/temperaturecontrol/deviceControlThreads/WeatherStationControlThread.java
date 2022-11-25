@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -31,6 +34,7 @@ public class WeatherStationControlThread extends Thread{
     public void run(){
 
         while(true){
+
             Thread.sleep(5000);
             try{
                 WeatherStation weatherStation = WeatherStation.getInstance();
@@ -59,6 +63,7 @@ public class WeatherStationControlThread extends Thread{
                 AlertHolder alertHolder = AlertHolder.getInstance();
                 alertHolder.setWeatherStationError(true);
                 System.out.println("finished");
+
             }
         }
 
