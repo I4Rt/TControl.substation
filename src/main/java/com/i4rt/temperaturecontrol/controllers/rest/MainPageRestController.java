@@ -53,7 +53,7 @@ public class MainPageRestController {
         mipControlThread.start();
 
         MIPSaver mipSaver = new MIPSaver(this.mipMeasurementRepo);
-        mipSaver.run();
+        mipSaver.start();
 
 
         Calendar prevCalendar = Calendar.getInstance();

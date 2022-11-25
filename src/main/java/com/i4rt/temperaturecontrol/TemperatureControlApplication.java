@@ -13,7 +13,6 @@ public class TemperatureControlApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TemperatureControlApplication.class, args);
-
     }
 
 }

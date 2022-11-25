@@ -33,7 +33,6 @@ public class MIPControlThread extends Thread{
                 BufferedReader in = new BufferedReader(new InputStreamReader(oracle.openStream()));
 
                 while (true){
-
                     String resultString = in.readLine();
                     if(!resultString.equals(null) | resultString.length() < 2){
                         resultString.replace("data: ", "");
@@ -51,6 +50,8 @@ public class MIPControlThread extends Thread{
                         mipMeasurement.setPowerA(Double.parseDouble(dataArray[47]));
                         mipMeasurement.setDatetime(Calendar.getInstance().getTime());
                         lastMeasurement = mipMeasurement;
+                        in.close();
+                        in = new BufferedReader(new InputStreamReader(oracle.openStream()));
                     }
 
 
