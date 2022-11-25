@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
 
 @Setter
@@ -58,8 +59,8 @@ public class MIPControlThread extends Thread{
             } catch (Exception e) {
                 File f = new File("error.txt");
                 f.createNewFile();
-                FileWriter writer = new FileWriter(f);
-                writer.write("MIP error: " );
+                FileWriter writer = new FileWriter(f, true);
+                writer.write(Calendar.getInstance().getTime() + "MIP error: " );
                 writer.write(e.toString());
                 writer.close();
 
