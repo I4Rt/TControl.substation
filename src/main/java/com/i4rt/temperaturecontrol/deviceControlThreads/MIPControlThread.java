@@ -26,11 +26,11 @@ public class MIPControlThread extends Thread{
     public void run(){
 
         while(true){
-
+            BufferedReader in = null;
             try {
                 System.out.println("MIP Read Try");
                 URL oracle = new URL("http://192.168.200.31/eventsource/telemech.csv");
-                BufferedReader in = new BufferedReader(new InputStreamReader(oracle.openStream()));
+                in  = new BufferedReader(new InputStreamReader(oracle.openStream()));
 
                 while (true){
                     String resultString = in.readLine();
@@ -50,14 +50,18 @@ public class MIPControlThread extends Thread{
                         mipMeasurement.setPowerA(Double.parseDouble(dataArray[47]));
                         mipMeasurement.setDatetime(Calendar.getInstance().getTime());
                         lastMeasurement = mipMeasurement;
-                        in.close();
-                        in = new BufferedReader(new InputStreamReader(oracle.openStream()));
+                        in.mark(0);
+                        in.reset();
                     }
 
 
                 }
 
             } catch (Exception e) {
+                if(! in.equals(null)){
+                    in.close();
+                }
+
                 File f = new File("error.txt");
                 f.createNewFile();
                 FileWriter writer = new FileWriter(f, true);
@@ -68,6 +72,7 @@ public class MIPControlThread extends Thread{
                 System.out.println("MIP error: " );
                 System.out.println(e.toString());
                 System.out.println("MIPCT Break run again");
+
                 //recursy?
                 MIPControlThread mipControlThread = new MIPControlThread();
                 mipControlThread.start();
