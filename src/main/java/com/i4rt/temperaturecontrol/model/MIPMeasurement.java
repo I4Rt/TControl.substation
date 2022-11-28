@@ -10,7 +10,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class MIPMeasurement {
+public class MIPMeasurement extends MeasurementData{
     @Id
     @Column(name = "mip_measurement_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

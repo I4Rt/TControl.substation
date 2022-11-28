@@ -35,8 +35,8 @@ public class MIPSaver extends Thread{
             try {
 
                 while (true){
-                    Thread.sleep(5000);
-                    ;
+                    Thread.sleep(20000);
+
                     MIPMeasurement mipMeasurement = new MIPMeasurement();
                     mipMeasurement.setPowerA(MIPControlThread.lastMeasurement.getPowerA());
                     mipMeasurement.setPowerB(MIPControlThread.lastMeasurement.getPowerB());
@@ -48,14 +48,19 @@ public class MIPSaver extends Thread{
                     mipMeasurement.setVoltageB(MIPControlThread.lastMeasurement.getVoltageB());
                     mipMeasurement.setVoltageC(MIPControlThread.lastMeasurement.getVoltageC());
                     mipMeasurement.setDatetime(MIPControlThread.lastMeasurement.getDatetime());
-                    System.out.println("Saving Mip Result: " + mipMeasurement);
                     MIPMeasurementRepo.save(mipMeasurement);
+
+
                 }
 
             } catch (Exception e) {
                 System.out.println("MIP save data error: " );
                 System.out.println(e.toString());
-                run(); // Recursy!
+
+                MIPSaver mipSaver = new MIPSaver(MIPMeasurementRepo);
+                mipSaver.start();
+                return;
+
             }
 
         }

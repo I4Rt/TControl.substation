@@ -16,7 +16,7 @@ import java.util.Calendar;
 public class MIPControlThread extends Thread{
 
 
-    private MIPMeasurementRepo voltageMeasurementRepo;
+    public static BufferedReader in = null;
 
     public static MIPMeasurement lastMeasurement = new MIPMeasurement();
 
@@ -25,43 +25,57 @@ public class MIPControlThread extends Thread{
     @SneakyThrows
     public void run(){
 
+        // Hope it helps to handle mistook connections problem
+        try{
+            in.close();
+        }
+        catch (Exception e){
+            System.out.println("Drop connection error: " + e);
+        }
+        finally{
+            in = null;
+        }
+
         while(true){
-            BufferedReader in = null;
+
+
             try {
-                System.out.println("MIP Read Try");
+
                 URL oracle = new URL("http://192.168.200.31/eventsource/telemech.csv");
                 in  = new BufferedReader(new InputStreamReader(oracle.openStream()));
 
                 while (true){
                     String resultString = in.readLine();
-                    if(!resultString.equals(null) | resultString.length() < 2){
-                        resultString.replace("data: ", "");
-                        String[] dataArray = resultString.split(",");
+                    if(resultString != null){
+                        if(resultString.length() > 20){
+                            resultString.replace("data: ", "");
+                            String[] dataArray = resultString.split(",");
+                            try{
+                                MIPMeasurement mipMeasurement = new MIPMeasurement();
+                                mipMeasurement.setAmperageA(Double.parseDouble(dataArray[22]));
+                                mipMeasurement.setAmperageB(Double.parseDouble(dataArray[23]));
+                                mipMeasurement.setAmperageC(Double.parseDouble(dataArray[24]));
+                                mipMeasurement.setVoltageA(Double.parseDouble(dataArray[34]));
+                                mipMeasurement.setVoltageB(Double.parseDouble(dataArray[35]));
+                                mipMeasurement.setVoltageC(Double.parseDouble(dataArray[36]));
+                                mipMeasurement.setPowerA(Double.parseDouble(dataArray[45]));
+                                mipMeasurement.setPowerA(Double.parseDouble(dataArray[46]));
+                                mipMeasurement.setPowerA(Double.parseDouble(dataArray[47]));
+                                mipMeasurement.setDatetime(Calendar.getInstance().getTime());
+                                lastMeasurement = mipMeasurement;
+                            }catch (Exception e){
+                                System.out.println("MIP split error: " + e);
+                            }
+                        }
 
-                        MIPMeasurement mipMeasurement = new MIPMeasurement();
-                        mipMeasurement.setAmperageA(Double.parseDouble(dataArray[22]));
-                        mipMeasurement.setAmperageB(Double.parseDouble(dataArray[23]));
-                        mipMeasurement.setAmperageC(Double.parseDouble(dataArray[24]));
-                        mipMeasurement.setVoltageA(Double.parseDouble(dataArray[34]));
-                        mipMeasurement.setVoltageB(Double.parseDouble(dataArray[35]));
-                        mipMeasurement.setVoltageC(Double.parseDouble(dataArray[36]));
-                        mipMeasurement.setPowerA(Double.parseDouble(dataArray[45]));
-                        mipMeasurement.setPowerA(Double.parseDouble(dataArray[46]));
-                        mipMeasurement.setPowerA(Double.parseDouble(dataArray[47]));
-                        mipMeasurement.setDatetime(Calendar.getInstance().getTime());
-                        lastMeasurement = mipMeasurement;
                         in.mark(0);
                         in.reset();
                     }
-
-
                 }
-
             } catch (Exception e) {
-                if(! in.equals(null)){
+                if(in != null){
                     in.close();
                 }
-
                 File f = new File("error.txt");
                 f.createNewFile();
                 FileWriter writer = new FileWriter(f, true);
@@ -71,11 +85,11 @@ public class MIPControlThread extends Thread{
 
                 System.out.println("MIP error: " );
                 System.out.println(e.toString());
-                System.out.println("MIPCT Break run again");
+                Thread.sleep(5000);
 
-                //recursy?
                 MIPControlThread mipControlThread = new MIPControlThread();
                 mipControlThread.start();
+                return;
             }
 
         }

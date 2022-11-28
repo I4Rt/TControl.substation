@@ -178,6 +178,7 @@ public class AddingPageRestController {
     public String autoFocusing(@RequestParam(name = "thermalImagerId") Long id){
         Map<String, Object> result = new HashMap<>();
         try {
+
         ThermalImager ti = thermalImagerRepo.getById(id);
 
         result.put("focus", ti.setAutoFocus());

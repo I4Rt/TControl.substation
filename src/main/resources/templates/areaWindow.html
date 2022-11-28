@@ -31,7 +31,8 @@
     let needUpdate = true;
     let needUpdateImages = false;
 
-    let needShowTemperature = false;
+    let needShowTemperature = true;
+    let needShowPower = true;
 
 
     let current_id = 0;
@@ -41,6 +42,11 @@
     let weatherCurrentData;
 
     let myChart;
+
+    let curTimeArray;
+    let curWeatherArray;
+    let curPowerArray;
+    let curTemperatureArray;
 
     function updateImages(){
         console.log('need update images ' + needUpdateImages);
@@ -127,18 +133,8 @@
         .then((response) => {
             response.text().then(function (data){
                 currentData = JSON.parse(data);
-                    dataToSend = {}
-                    if(begin != "" && end != ""){
-                        dataToSend["begin"] = begin;
-                        dataToSend["end"] = end;
-                    }
                     if(needUpdate) {
-                        dataToSend["begin"] = currentData['time'][currentData["time"].length - 1];
-                        dataToSend["end"] = currentData['time'][0];
-
-                        console.log("dataToSend " + JSON.stringify(dataToSend))
-
-                        fetch("/getWeatherTemperature", {
+                        fetch("/getDataToUpdate", {
                             method: "POST",
                             headers: {
                                 'Content-Type': 'application/json',
@@ -147,15 +143,17 @@
                         })
                         .then((response) => {
                             response.text().then(function (data) {
-                                weatherCurrentData = JSON.parse(data);
+                                let curData = JSON.parse(data);
 
-                                console.log(weatherCurrentData)
-                                // console.log(weatherCurrentData);
+                                currentData['imagesNames'] = curData['imagesNames']
 
+                                curTimeArray = curData['time'];
+                                curTemperatureArray = curData['temperature'];
+                                curWeatherArray = curData['weather'];
+                                curPowerArray = curData['power'];
 
-                                updatePageStatistics();
-
-                                updateImages();
+                                newUpdatePageStatistics();
+                                updateImages()
                             })
                         })
                         .catch((error) => {
@@ -164,6 +162,7 @@
                     }
                     updatePageStatisticsTemperature()
                 })
+
         })
         .catch((error) => {
             console.error('Error:', error);
@@ -189,100 +188,186 @@
 
 
     }
-    function updatePageStatistics(){
-        const labels = currentData["time"];
-        const weatherLabels = weatherCurrentData["time"];
+    // function updatePageStatistics() {
+    //     const labels = currentData["time"];
+    //     const weatherLabels = weatherCurrentData["time"];
+    //
+    //     console.log("temp size: " + labels.length)
+    //     console.log("weather size: " + labels.length)
+    //
+    //     let totalLabels = []
+    //
+    //     for (let n = 0; n < labels.length; n++) {
+    //         totalLabels[n] = labels[n];
+    //     }
+    //
+    //
+    //     for (let k = 0; k < weatherLabels.length; k++) {
+    //         if (!totalLabels.includes(weatherLabels[k])) {
+    //             totalLabels.push(weatherLabels[k]);
+    //         }
+    //     }
+    //     console.log("total size: " + totalLabels.length)
+    //
+    //     totalLabels = totalLabels.sort(); // time sorting: bug!
+    //
+    //     let insideData1 = []
+    //     let insideData2 = []
+    //
+    //
+    //     for (let i = 0; i < totalLabels.length; i++) {
+    //         let setData1 = false;
+    //         let setData2 = false;
+    //
+    //         for (let j = 0; j < currentData["temperature"].length; j++) {
+    //             if (currentData["time"][j] == totalLabels[i]) {
+    //                 setData1 = true;
+    //                 insideData1.push(currentData["temperature"][j])
+    //             }
+    //         }
+    //         if (setData1 == false) {
+    //             insideData1.push(null)
+    //         }
+    //         for (let j = 0; j < weatherCurrentData["weatherTemperature"].length; j++) {
+    //             if (weatherCurrentData["time"][j] == totalLabels[i]) {
+    //                 setData2 = true;
+    //                 insideData2.push(weatherCurrentData["weatherTemperature"][j])
+    //                 break;
+    //             }
+    //         }
+    //         if (setData2 == false) {
+    //             insideData2.push(null)
+    //         }
+    //     }
+    //     console.log("array size: " + totalLabels.length)
+    //     console.log("data1 " + insideData1.length)
+    //     console.log(insideData1)
+    //     console.log("data2 " + insideData2.length)
+    //     console.log(insideData2)
+    //
+    //
+    //     console.log("bool " + needShowTemperature)
+    //     console.log("temperature data " + currentData["temperature"])
+    //
+    //     let cloneTime = [...currentData["time"]]
+    //     let temperatures = [...currentData["temperature"]];
+    //
+    //     const myData = {
+    //         labels: needShowTemperature ? totalLabels : cloneTime.reverse(),
+    //         datasets: needShowTemperature ?
+    //             [
+    //                 {
+    //                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период",
+    //                     backgroundColor: 'rgb(255, 99, 132)',
+    //                     borderColor: 'rgb(255, 99, 132)',
+    //                     data: insideData1,
+    //                 },
+    //                 {
+    //                     label: "Данные температуры воздуха",
+    //                     backgroundColor: 'rgb(99, 255, 132)',
+    //                     borderColor: 'rgb(99, 255, 132)',
+    //                     data: insideData2,
+    //                 }
+    //             ]
+    //             :
+    //             [
+    //                 {
+    //                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период",
+    //                     backgroundColor: 'rgb(255, 99, 132)',
+    //                     borderColor: 'rgb(255, 99, 132)',
+    //                     data: temperatures.reverse(),
+    //                 }
+    //             ]
+    //     };
+    //     const config = {
+    //         type: 'line',
+    //         data: myData,
+    //         options: {
+    //             spanGaps: true,
+    //             animation: {
+    //                 duration: 0
+    //             }
+    //         }
+    //     };
+    //     if (myChart != null) {
+    //         myChart.destroy();
+    //     }
+    // }
 
-        console.log("temp size: " + labels.length)
-        console.log("weather size: " + labels.length)
+    function newUpdatePageStatistics(){
+        const myLabels = curTimeArray;
+        let myDatasets;
+        if(needShowTemperature && needShowPower){
 
-        let totalLabels = []
-
-        for (let n = 0; n < labels.length; n++) {
-            totalLabels[n] = labels[n];
-        }
-
-
-        for(let k = 0; k < weatherLabels.length; k++){
-            if(! totalLabels.includes(weatherLabels[k])){
-                totalLabels.push(weatherLabels[k]);
-            }
-        }
-        console.log("total size: " + totalLabels.length)
-
-        totalLabels = totalLabels.sort(); // time sorting: bug!
-
-        let insideData1 = []
-        let insideData2 = []
-
-
-        for(let i = 0; i < totalLabels.length; i++){
-            let setData1 = false;
-            let setData2 = false;
-
-            for(let j = 0; j < currentData["temperature"].length; j++){
-                if(currentData["time"][j] == totalLabels[i]){
-                    setData1 = true;
-                    insideData1.push(currentData["temperature"][j])
-                }
-            }
-            if(setData1 == false){
-                insideData1.push(null)
-            }
-            for(let j = 0; j < weatherCurrentData["weatherTemperature"].length; j++){
-                if(weatherCurrentData["time"][j] == totalLabels[i]){
-                    setData2 = true;
-                    insideData2.push(weatherCurrentData["weatherTemperature"][j])
-                    break;
-                }
-            }
-            if(setData2 == false){
-                insideData2.push(null)
-            }
-        }
-        console.log("array size: " + totalLabels.length)
-        console.log("data1 " + insideData1.length)
-        console.log(insideData1)
-        console.log("data2 " + insideData2.length)
-        console.log(insideData2)
-
-
-
-        console.log("bool " + needShowTemperature)
-        console.log("temperature data " + currentData["temperature"])
-
-        let cloneTime = [...currentData["time"]]
-        let temperatures = [...currentData["temperature"]];
-
-        const myData = {
-            labels: needShowTemperature ? totalLabels : cloneTime.reverse(),
-            datasets: needShowTemperature ?
-            [
+            myDatasets = [
                 {
-                    label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период" ,
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
-                    data:  insideData1,
+                    data:  curTemperatureArray,
                 },
                 {
-                    label: "Данные температуры воздуха" ,
+                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха" ,
+                    backgroundColor: 'rgb(99, 132, 255)',
+                    borderColor: 'rgb(99, 132, 255)',
+                    data:  curWeatherArray,
+                },
+                {
+                    label: needUpdate ? "Данные мощностей за 50 измерений (10^2)" : "Данные мощностей (10^2)",
                     backgroundColor: 'rgb(99, 255, 132)',
                     borderColor: 'rgb(99, 255, 132)',
-                    data:  insideData2,
+                    data:  curPowerArray,
                 }
-            ]
-            :
-            [
+            ];
+        }
+        else if(needShowTemperature){
+            myDatasets = [
                 {
-                    label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период" ,
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
-                    data:  temperatures.reverse(),
+                    data:  curTemperatureArray,
+                },
+                {
+                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха" ,
+                    backgroundColor: 'rgb(99, 132, 255)',
+                    borderColor: 'rgb(99, 132, 255)',
+                    data:  curWeatherArray,
                 }
-            ]
+            ];
+        }
+        else if(needShowPower){
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                },
+                {
+                    label: needUpdate ? "Данные мощностей за 50 измерений (10^2)" : "Данные мощностей (10^2)",
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
+                    data:  curPowerArray,
+                }
+            ];
+        }
+        else{
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температур за 50 измерений" : "Данные температуры объекта контроля" ,
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                }
+            ];
+        }
+
+        const myData = {
+            labels: myLabels,
+            datasets: myDatasets
         };
-
-
+        console.log(myDatasets)
         const config = {
             type: 'line',
             data: myData,
@@ -305,8 +390,9 @@
         $(".loading").addClass("hidden");
         $("#myChart").removeClass("hidden");
 
+        console.log('Chart updated!')
+    }
 
-    };
 
     function beep() {
         var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
@@ -374,7 +460,7 @@
                 <div class="myColumn">
                     <div class="myRow" style="width: 650px; justify-content: flex-start">
                         <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
-                        <button class="basicButton" style="width: fit-content; font-size: 16px">Нагрузки</button>
+                        <button class="basicButton" style="width: fit-content; font-size: 16px" id="power">Нагрузки</button>
                     </div>
                 </div>
 
@@ -492,7 +578,66 @@
 
 <script src="js/jquery.min.js"></script>
 <script>
+    $("#makeChartRequest").click(function (){
+        $(".loading").removeClass("hidden");
+        $("#myChart").addClass("hidden");
+        needUpdate = false;
+        needUpdateImages = true;
 
+        let date1 = $("#beginDay").val();
+        let normalDate1 = date1.split("-")[2] + "." + date1.split("-")[1] + "." + date1.split("-")[0]
+
+
+        let date2 = $("#endDay").val();
+        let normalDate2 = date2.split("-")[2] + "." + date2.split("-")[1] + "." + date2.split("-")[0]
+
+
+        let value1 = normalDate1 + "-" +$("#beginTime").val()+":00"
+        let value2 = normalDate2 + "-" +$("#endTime").val()+":00"
+
+        console.log('begin: ' + value1)
+        console.log('end: ' + value2)
+
+
+
+        let dataToSend = {};
+
+        dataToSend["id"] = parseInt($("#curId").html());
+        dataToSend["begin"] = value1;
+        dataToSend["end"] = value2;
+
+        let dataStringToSend = JSON.stringify(dataToSend);
+
+        console.log(dataStringToSend)
+
+        fetch("/getTemperatureInRange", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataStringToSend,
+        })
+            .then((response) => {
+                response.text().then(function (data) {
+                    console.log('Data got point 1')
+                    let curData = JSON.parse(data);
+
+                    currentData['imagesNames'] = curData['imagesNames']
+
+                    curTimeArray = curData['time'];
+                    curTemperatureArray = curData['temperature'];
+                    curWeatherArray = curData['weather'];
+                    curPowerArray = curData['power'];
+
+                    newUpdatePageStatistics();
+                    updateImages()
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+
+            });
+    });
     $(".main").click(function (){
         $(".system").addClass("hidden");
         $(".directions").addClass("hidden");
@@ -570,85 +715,7 @@
 
     }
 
-    $("#makeChartRequest").click(function (){
-        $(".loading").removeClass("hidden");
-        $("#myChart").addClass("hidden");
-        needUpdate = false;
-        needUpdateImages = true;
 
-        let date1 = $("#beginDay").val();
-        let normalDate1 = date1.split("-")[2] + "." + date1.split("-")[1] + "." + date1.split("-")[0]
-
-
-        let date2 = $("#endDay").val();
-        let normalDate2 = date2.split("-")[2] + "." + date2.split("-")[1] + "." + date2.split("-")[0]
-
-
-        let value1 = normalDate1 + "-" +$("#beginTime").val()+":00"
-        let value2 = normalDate2 + "-" +$("#endTime").val()+":00"
-
-        console.log('begin: ' + value1)
-        console.log('end: ' + value2)
-
-
-
-        let dataToSend = {};
-
-        dataToSend["id"] = parseInt($("#curId").html());
-        dataToSend["begin"] = value1;
-        dataToSend["end"] = value2;
-
-        let dataStringToSend = JSON.stringify(dataToSend);
-
-        console.log(dataStringToSend)
-
-        fetch("/getTemperatureInRange", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: dataStringToSend,
-        })
-        .then((response) => {
-            response.text().then(function (data) {
-                currentData = JSON.parse(data);
-
-                begin = currentData['time'][currentData['time'].length - 1];
-                end = currentData['time'][0];
-
-                dataToSend = {}
-
-
-                dataToSend["begin"] = begin;
-                dataToSend["end"] = end;
-
-                fetch("/getWeatherTemperature", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(dataToSend),
-                })
-                .then((response) => {
-                    response.text().then(function (data2) {
-                        weatherCurrentData = JSON.parse(data2);
-
-                        updatePageStatistics();
-                        updateImages();
-                    })
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-
-                });
-            })
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-
-        });
-
-    });
 
     $("#beginUpdate").click(function (){
         $(".loading").removeClass("hidden");
@@ -673,7 +740,12 @@
 
     $('#weatherTemperature').click(function (){
        needShowTemperature = !needShowTemperature;
-       updatePageStatistics();
+       newUpdatePageStatistics();
+    });
+
+    $('#power').click(function (){
+        needShowPower = !needShowPower;
+        newUpdatePageStatistics();
     });
 
 
@@ -805,6 +877,9 @@
             $(this).parent().addClass("hidden");
         });
     });
+
+
+
 </script>
 
 

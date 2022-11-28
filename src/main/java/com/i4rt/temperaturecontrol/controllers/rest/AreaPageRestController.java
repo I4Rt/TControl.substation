@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.Services.MeasurementsDisplayPrepareService;
 import com.i4rt.temperaturecontrol.basic.FolderManager;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
@@ -56,12 +57,16 @@ public class AreaPageRestController {
                 if(!(controlObjectRepo.findById(data.getLong("id")).isEmpty())){
                     curControlObject = controlObjectRepo.getById(data.getLong("id"));
                     if(!curControlObject.getName().equals(data.getString("name"))) folderManager.renameFolders(curControlObject, data.getString("name"));
-                    if(! measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature().equals(null)){
-                        curControlObject.setName(data.getString("name"));
-                        curControlObject.setWarningTemp(data.getDouble("warningTemp"));
-                        curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
-                        curControlObject.updateTemperatureClass(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature(), weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
+                    curControlObject.setName(data.getString("name"));
+                    curControlObject.setWarningTemp(data.getDouble("warningTemp"));
+                    curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
+                    if(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).size() != 0){
+                        if(! measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature().equals(null)){
+                            curControlObject.updateTemperatureClass(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature(), weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
+                        }
                     }
+
+
                 }
             }
             else{
@@ -80,7 +85,7 @@ public class AreaPageRestController {
         }
         catch (Exception e){
             System.out.println(e);
-            result.put("message", "Данные сохранены");
+            result.put("message", "Данные не сохранены");
         }
         finally {
             String jsonStringToSend = JSONObject.valueToString(result);
@@ -93,6 +98,7 @@ public class AreaPageRestController {
         JSONObject data = new JSONObject(dataJson);
         Long searchControlObjectId = data.getLong("id");
         Integer limit = data.getInt("limit");
+
 
         List<Measurement> curMeasurements = measurementRepo.getMeasurementByDatetime(searchControlObjectId, limit);
 
@@ -107,62 +113,75 @@ public class AreaPageRestController {
             ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
         }
 
-        Date beginningDate = curMeasurements.get(0).getDatetime();
-        Date endingDate = curMeasurements.get(curMeasurements.size() - 1).getDatetime();
-
-        System.out.println("begin date " + beginningDate);
-        System.out.println("end date " + endingDate);
-
-        // getting images names:
-        preparedToSendData.put("imagesNames", new ArrayList<String>());
-
-        File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
-        File[] listOfFiles = folder.listFiles();
-
-        System.out.println("basic: " + listOfFiles.length);
-
-        for (int i = 0; i < listOfFiles.length; i++) {
-            File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
-            File[] listOfInsideFolders = insideFolder.listFiles();
-
-            for(int j = 0; j < listOfInsideFolders.length; j++){
-                System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
-                if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
-                    File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
-                    File[] listOfInsideFiles = insideFiles.listFiles();
-                    Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
-
-                    for(int n = 0; n < listOfInsideFiles.length; n++){
-                        Date tempDate = null; // select year!
-                        try {
-                            tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-                            System.out.println("temp date: " + tempDate);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-
-                        if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
-                            ((ArrayList<String>)preparedToSendData.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
-                        }
-                    }
-
-
-                }
-            }
 
 
 
-        }
-
-        System.out.println("Images array: " + preparedToSendData.get("imagesNames"));
 
         String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
 
         //System.out.println("temp_data: " + jsonStringToSend);
 
         return jsonStringToSend;
-    }@RequestMapping(value="getWeatherTemperature",method = RequestMethod.POST)
+    }
+    @RequestMapping(value = "getDataToUpdate", method = RequestMethod.POST)
+    public String getDataToUpdate(@RequestBody String dataJson){
+        JSONObject data = new JSONObject(dataJson);
+        Long searchControlObjectId = data.getLong("id");
+        Integer limit = data.getInt("limit");
+
+        Map<String, Object> result =  MeasurementsDisplayPrepareService.getPreparedMeasurementsArraysLimited(searchControlObjectId, limit);
+        // getting images names:
+        result.put("imagesNames", new ArrayList<String>());
+
+        if(((ArrayList<Date>) result.get("time")).size() > 2){
+            Date beginningDate = ((ArrayList<Date>) result.get("time")).get(0);
+            Date endingDate = ((ArrayList<Date>) result.get("time")).get(((ArrayList<Date>) result.get("time")).size() - 1);
+
+            File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
+            File[] listOfFiles = folder.listFiles();
+
+            for (int i = 0; i < listOfFiles.length; i++) {
+                File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
+                File[] listOfInsideFolders = insideFolder.listFiles();
+
+                for(int j = 0; j < listOfInsideFolders.length; j++){
+                    System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
+                    if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
+                        File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
+                        File[] listOfInsideFiles = insideFiles.listFiles();
+                        Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
+
+                        for(int n = 0; n < listOfInsideFiles.length; n++){
+                            Date tempDate = null; // select year!
+                            try {
+                                tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
+                                System.out.println("temp date: " + tempDate);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+
+                            if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
+                                ((ArrayList<String>)result.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+
+
+
+        return JSONObject.valueToString(result);
+    }
+
+
+    @RequestMapping(value="getWeatherTemperature",method = RequestMethod.POST)
     public String getTemperatureWeatherMeasurementJsonString(@RequestBody String dataJson){
+
+
+
         JSONObject data = new JSONObject(dataJson);
 
 
@@ -210,34 +229,27 @@ public class AreaPageRestController {
         String end = data.getString("end");
         System.out.println("In Range begin: " + begin);
         System.out.println("In Range end: " + end);
+
+
         try {
             Date beginningDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(begin);
             Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
 
-            System.out.println("In Range begin: " + beginningDate);
-            System.out.println("In Range end: " + endingDate);
-
-            List<Measurement> results = measurementRepo.getMeasurementByDatetimeInRange(searchControlObjectId, beginningDate, endingDate);
 
 
-            Map<String, Object> preparedToSendData = new HashMap<>();
+            HashMap<String, Object> results = MeasurementsDisplayPrepareService.getPreparedMeasurementsArrays(searchControlObjectId, beginningDate, endingDate);
 
-            preparedToSendData.put("time", new ArrayList<String>());
-            preparedToSendData.put("temperature", new ArrayList<Double>());
-            preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
-
-            for(Measurement measurement: results){
-                ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
-                ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
-            }
+            System.out.println("temperature: " + (ArrayList<Double>) results.get("temperature"));
+            System.out.println("weather: " + (ArrayList<Double>) results.get("weather"));
+            System.out.println("power: " + (ArrayList<Double>) results.get("power"));
+            System.out.println("time: " + (ArrayList<Date>) results.get("time"));
 
 
-            preparedToSendData.put("imagesNames", new ArrayList<String>());
+            // getting images names:
+            results.put("imagesNames", new ArrayList<String>());
 
             File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
             File[] listOfFiles = folder.listFiles();
-
-            System.out.println("basic: " + listOfFiles.length);
 
             for (int i = 0; i < listOfFiles.length; i++) {
                 File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
@@ -248,30 +260,90 @@ public class AreaPageRestController {
                     if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
                         File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
                         File[] listOfInsideFiles = insideFiles.listFiles();
+                        Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
 
                         for(int n = 0; n < listOfInsideFiles.length; n++){
                             Date tempDate = null; // select year!
                             try {
                                 tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-                                //System.out.println("temp date: " + tempDate);
+                                System.out.println("temp date: " + tempDate);
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
-                            System.out.println("in range ending compare" + endingDate.compareTo(tempDate));
-                            System.out.println("in range beginning compare" + beginningDate.compareTo(tempDate));
-                            if((endingDate.compareTo(tempDate) == 1) && beginningDate.compareTo(tempDate) == -1){
-                                ((ArrayList<String>)preparedToSendData.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+
+                            if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
+                                ((ArrayList<String>)results.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
                             }
                         }
                     }
                 }
-            }
-            //System.out.println("get images in range: " + preparedToSendData.get("imagesNames"));
 
-            String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
+
+
+            }
+
+
+//            System.out.println("In Range begin: " + beginningDate);
+//            System.out.println("In Range end: " + endingDate);
+//
+//            List<Measurement> results = measurementRepo.getMeasurementByDatetimeInRange(searchControlObjectId, beginningDate, endingDate);
+//
+//
+//            Map<String, Object> preparedToSendData = new HashMap<>();
+//
+//            preparedToSendData.put("time", new ArrayList<String>());
+//            preparedToSendData.put("temperature", new ArrayList<Double>());
+//            preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
+//
+//            for(Measurement measurement: results){
+//                ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
+//                ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
+//            }
+//
+//
+//            preparedToSendData.put("imagesNames", new ArrayList<String>());
+//
+//            File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
+//            File[] listOfFiles = folder.listFiles();
+//
+//            System.out.println("basic: " + listOfFiles.length);
+//
+//            for (int i = 0; i < listOfFiles.length; i++) {
+//                File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
+//                File[] listOfInsideFolders = insideFolder.listFiles();
+//
+//                for(int j = 0; j < listOfInsideFolders.length; j++){
+//                    System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
+//                    if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
+//                        File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
+//                        File[] listOfInsideFiles = insideFiles.listFiles();
+//
+//                        for(int n = 0; n < listOfInsideFiles.length; n++){
+//                            Date tempDate = null; // select year!
+//                            try {
+//                                tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
+//                                //System.out.println("temp date: " + tempDate);
+//                            } catch (ParseException e) {
+//                                e.printStackTrace();
+//                            }
+//                            System.out.println("in range ending compare" + endingDate.compareTo(tempDate));
+//                            System.out.println("in range beginning compare" + beginningDate.compareTo(tempDate));
+//                            if((endingDate.compareTo(tempDate) == 1) && beginningDate.compareTo(tempDate) == -1){
+//                                ((ArrayList<String>)preparedToSendData.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            //System.out.println("get images in range: " + preparedToSendData.get("imagesNames"));
+
+
+
+            String jsonStringToSend = JSONObject.valueToString(results);
             return jsonStringToSend;
-        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Get measurements in range error: " + e);
+
         }
         return "error";
     }

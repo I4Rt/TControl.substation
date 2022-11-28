@@ -5,4 +5,8 @@ import java.util.Date;
 
 public abstract class MeasurementData {
     Date datetime;
+
+    public Date getDatetime(){
+        return datetime;
+    }
 }
