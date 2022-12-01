@@ -8,6 +8,8 @@ import com.i4rt.temperaturecontrol.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -85,11 +87,11 @@ public class MeasurementsDisplayPrepareService {
                 else if(obj instanceof MIPMeasurement){
                     MIPMeasurement finObj = (MIPMeasurement) obj;
                     if(controlObject.getVoltageMeasurementChannel().equals("A"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerA() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerA() / 1000);
                     else if(controlObject.getVoltageMeasurementChannel().equals("B"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerB() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerB() / 1000);
                     else if(controlObject.getVoltageMeasurementChannel().equals("C"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerC() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerC() / 1000);
                 }
             }
 
@@ -118,12 +120,14 @@ public class MeasurementsDisplayPrepareService {
             ArrayList<MeasurementData> measurements = new ArrayList<>();
             ArrayList<Measurement> m = measurementRepo.getMeasurementByDatetime(id, limit);
             if(m.size() > 1){
-
-                Date beginning = m.get(0).getDatetime();
-                Date ending = m.get(m.size() - 1).getDatetime();
+                Date ending = m.get(0).getDatetime();
+                Date beginning = m.get(m.size() - 1).getDatetime();
+                System.out.println("date for mip: " + beginning + " -> " + ending);
                 measurements.addAll(m);
-                measurements.addAll(weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginning, ending));
-                measurements.addAll(mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginning, ending));
+                measurements.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginning, ending));
+                measurements.addAll( mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginning, ending));
+
+                System.out.println("mip measurements in limited time: " + mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginning, ending).size());
             }
             else{
                 measurements.addAll(new ArrayList<Measurement>());
@@ -168,17 +172,19 @@ public class MeasurementsDisplayPrepareService {
                 else if(obj instanceof MIPMeasurement){
                     MIPMeasurement finObj = (MIPMeasurement) obj;
                     if(controlObject.getVoltageMeasurementChannel().equals("A"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerA() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerA() / 1000);
                     else if(controlObject.getVoltageMeasurementChannel().equals("B"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerB() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerB() / 1000);
                     else if(controlObject.getVoltageMeasurementChannel().equals("C"))
-                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerC() / 100);
+                        tempPowerArray.set(totalDates.indexOf(finObj.getDatetime()), finObj.getPowerC() / 1000);
                 }
+
             }
 
             results.put("weather", tempWeatherArray);
             results.put("temperature", tempTemperatureArray);
             results.put("power", tempPowerArray);
+            System.out.println("POWER SIZE: " + tempPowerArray);
             results.put("time", totalDates);
             results.put("message", "ok");
         }

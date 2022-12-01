@@ -19,6 +19,7 @@ public class AlertHolder {
     private Boolean fourthTIError;
 
     private Boolean weatherStationError;
+    private Boolean MIPError;
 
     private AlertHolder() {
         this.needBeep = false;
@@ -27,6 +28,7 @@ public class AlertHolder {
         this.thirdTIError = false;
         this.fourthTIError = false;
         this.weatherStationError = false;
+        this.MIPError = false;
     }
 
     public static AlertHolder getInstance() {

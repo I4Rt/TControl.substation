@@ -46,15 +46,18 @@ public class MainController {
 
     @GetMapping("main")
     public String getMainPage(Model model) throws IOException {
-
+        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        user.setThermalImagerGrabbed(false);
+        userRepo.save(user);
         List<ControlObject> controlObjects = controlObjectRepo.findAll();
         List<ControlObject> controlObjectsToDisplay = controlObjectRepo.getControlObjectsToDisplay();
+
         model.addAttribute("controlObjects", controlObjects);
         model.addAttribute("controlObjectsToDisplay", controlObjectsToDisplay);
 
         model.addAttribute("src", "\"img/bg/map"+ UploadedImageCounter.getCurrentCounter() +".png\""); //Make getCurrentCounter method do not throw exception (try/catch)
 
-        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+
         model.addAttribute("user", user);
 
         user.setThermalImagerGrabbed(false);
@@ -71,8 +74,31 @@ public class MainController {
         return "mainWindow";
     }
 
+    @GetMapping("/doubleUsers")
+    public String getDoubleUsersPage(){
+        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        user.setThermalImagerGrabbed(false);
+        userRepo.save(user);
+        return "doubleUsers";
+    }
+    @GetMapping("/addingForced")
+    public String getAddingPageForced(){
+        userRepo.setThermalImagerNotGrabbedForAllUsers();
+        return "redirect:/adding";
+    }
+
+
     @GetMapping("adding")
     public String getAddingPage(Model model) throws IOException {
+
+        if(userRepo.getAllUsersThatGrabbedThermalImager().size() > 0 && !userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName()).getThermalImagerGrabbed()){
+            System.out.println("redirect because of connection size != 0: "  + (userRepo.getAllUsersThatGrabbedThermalImager().size() != 0));
+            return "redirect:/doubleUsers";
+        }
+        User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        curUser.setThermalImagerGrabbed(true);
+        userRepo.save(curUser);
+
 
         List<ControlObject> controlObjects = controlObjectRepo.findAll();
         model.addAttribute("controlObjects", controlObjects);
@@ -81,7 +107,7 @@ public class MainController {
 
         model.addAttribute("horizontal", ti.getCurHorizontal());
         model.addAttribute("vertical", ti.getCurVertical());
-        model.addAttribute("focusing", 500); // not work (non functionality)
+        model.addAttribute("focusing", 800); // not work (non functionality)
         model.addAttribute("src", "img/loading.gif");
 
 
@@ -106,7 +132,11 @@ public class MainController {
 
     @GetMapping("area")
     public String getAreaPage(@RequestParam Long id, Model model){
+        User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        curUser.setThermalImagerGrabbed(false);
+        userRepo.save(curUser);
         ControlObject controlObject =  controlObjectRepo.getById(id);
+
 
         model.addAttribute("controlObject", controlObject);
         model.addAttribute("coordinatesString",  controlObject.getCoordinatesString());
@@ -129,6 +159,10 @@ public class MainController {
 
     @GetMapping("newArea")
     public String addingAreaPage(Model model){
+        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        user.setThermalImagerGrabbed(false);
+        userRepo.save(user);
+
         ControlObject controlObject =  new ControlObject();
         System.out.println(controlObjectRepo.getLastObjectId());
 
@@ -137,7 +171,7 @@ public class MainController {
         model.addAttribute("controlObject", controlObject);
         model.addAttribute("coordinatesString",  "");
 
-        User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+
         model.addAttribute("user", user);
 
         user.setThermalImagerGrabbed(false);
@@ -156,12 +190,12 @@ public class MainController {
 
     @GetMapping("/register")
     public String registerPage(Model model){
-
-        User user = new User();
-
         User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         curUser.setThermalImagerGrabbed(false);
         userRepo.save(curUser);
+
+        User user = new User();
+
 
         model.addAttribute("user",  user);
         model.addAttribute("message",  "");
@@ -218,6 +252,9 @@ public class MainController {
 
     @GetMapping("/report")
     public String reportPage(Model model){
+        User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        curUser.setThermalImagerGrabbed(false);
+        userRepo.save(curUser);
 
         User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         model.addAttribute("user", user);

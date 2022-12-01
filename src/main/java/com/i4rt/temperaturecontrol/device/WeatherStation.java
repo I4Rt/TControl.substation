@@ -56,11 +56,11 @@ public class WeatherStation {
 
 
                 // Выбираем порт
-                sp.setDevice("COM9");
-
+                sp.setDevice("COM8");
+                sp.setParity(SerialPort.Parity.NONE);
                 sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
                 sp.setDataBits(8);
-                sp.setParity(SerialPort.Parity.NONE);
+
                 sp.setStopBits(1);
                 System.out.println("before modbus");
                 ModbusMaster m = ModbusMasterFactory.createModbusMasterRTU(sp);
@@ -74,7 +74,7 @@ public class WeatherStation {
                     int slaveId = 0x33;
 
                     // Опрашиваемый регистр, 6 - температура
-                    int offset = 6;
+
                     int quantity = 1;
 
                     this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
@@ -88,6 +88,7 @@ public class WeatherStation {
 
                     m.disconnect();
                 } catch (ModbusIOException e1) {
+                    m.disconnect();
                     throw e1;
                 }
             }

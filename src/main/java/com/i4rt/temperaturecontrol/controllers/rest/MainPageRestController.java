@@ -39,6 +39,8 @@ public class MainPageRestController {
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
 
+        userRepo.setThermalImagerNotGrabbedForAllUsers();
+
         ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo, weatherMeasurementRepo);
 
         ThermalImagersMainControlThread thermalImagersMainControlThread = ThermalImagersMainControlThread.getInstance();
@@ -88,12 +90,17 @@ public class MainPageRestController {
             jsonStringObjectsToDisplay += controlObject.getJsonStringWithMap();
             jsonStringObjectsToDisplay += ",";
         }
-        jsonStringObjectsToDisplay = jsonStringObjectsToDisplay.substring(0,jsonStringObjectsToDisplay.length() - 1);
+        if(jsonStringObjectsToDisplay.length() > 1){
+            jsonStringObjectsToDisplay = jsonStringObjectsToDisplay.substring(0,jsonStringObjectsToDisplay.length() - 1);
+        }
         jsonStringObjectsToDisplay += "]";
+
+        System.out.println("objects to display: " + jsonStringObjectsToDisplay);
         
 
         List<ControlObject> controlObjectsList = controlObjectRepo.findAll();
         String jsonStringObjectsList = "[";
+
         for (ControlObject controlObject : controlObjectsList) {
             jsonStringObjectsList += controlObject.getJsonStringNoMap();
             jsonStringObjectsList += ",";
@@ -101,7 +108,9 @@ public class MainPageRestController {
         jsonStringObjectsList = jsonStringObjectsList.substring(0,jsonStringObjectsList.length() - 1);
         jsonStringObjectsList += "]";
 
+        System.out.println("objects to list: " + jsonStringObjectsList);
 
+        System.out.println("[" + jsonStringObjectsList +", " + jsonStringObjectsToDisplay + "]");
         return "[" + jsonStringObjectsList +", " + jsonStringObjectsToDisplay + "]";
     }
 

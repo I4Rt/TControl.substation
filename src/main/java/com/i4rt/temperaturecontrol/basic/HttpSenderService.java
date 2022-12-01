@@ -136,7 +136,6 @@ public class HttpSenderService {
             System.out.println("http:GET Request Error: " + e);
         }
         finally {
-            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
             return result;
         }
@@ -165,7 +164,6 @@ public class HttpSenderService {
             System.out.println("http:PUT Request Error: " + e);
         }
         finally {
-            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
             return result;
         }
@@ -205,7 +203,6 @@ public class HttpSenderService {
             System.out.println("http:Get Image error: " + e);
         }
         finally {
-            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
 
             return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
@@ -245,7 +242,6 @@ public class HttpSenderService {
             System.out.println("http:Save Image Error: " + e);
         }
         finally {
-            System.out.println("cur con is "  + httpClient);
             ConnectionHolder.removeConnection(httpClient);
 
             return name +".jpg";

@@ -115,6 +115,10 @@
             <div class="text green">Подключение к метеостанции восстановлено</div>
             <div class="messageCross green">X</div>
         </div>
+        <div class="message green hidden" id="mip_ok">
+            <div class="text green">Подключение к MIP</div>
+            <div class="messageCross green">X</div>
+        </div>
         <div class="message red hidden" id="ti1_error">
             <div class="text red">Отсутствует подключение к тепловизору 1</div>
             <div class="messageCross red">X</div>
@@ -135,6 +139,10 @@
             <div class="text red">Отсутствует подключение к метеостанции</div>
             <div class="messageCross red">X</div>
         </div>
+        <div class="message red hidden" id="mip_error">
+            <div class="text red">Отсутствует подключение к МИП</div>
+            <div class="messageCross red">X</div>
+        </div>
     </div>
 </body>
 
@@ -144,12 +152,14 @@
     let needShowThirdTIError = true;
     let needShowFourthTIError = true;
     let needShowWeatherStationError = true;
+    let needShowMIPError= true;
     let needBeep = false;
     let firstTIError = false;
     let secondTIError = false;
     let thirdTIError = false;
     let fourthTIError = false;
     let weatherStationError = false;
+    let MIPError = false;
 
     $("#makeChartRequest").click(function (){
 
@@ -287,7 +297,13 @@
                         needShowWeatherStationError = true;
                     }
                     else {
-                        needShowWeatherStationError = false
+                        needShowWeatherStationError = false;
+                    }
+                    if(MIPError != insideData["MIPError"]){
+                        needShowMIPError = true;
+                    }
+                    else {
+                        needShowMIPError = false;
                     }
                     needBeep = insideData["beep"];
                     firstTIError = insideData["firstTIError"];
@@ -295,6 +311,7 @@
                     thirdTIError = insideData["thirdTIError"];
                     fourthTIError = insideData["fourthTIError"];
                     weatherStationError = insideData["weatherStationError"];
+                    MIPError = insideData["MIPError"];
                     updateAlerts();
                     if(needBeep){
                         beep();
@@ -327,6 +344,10 @@
             $("#ws_ok").addClass('hidden');
             $("#ws_error").removeClass('hidden');
         }
+        if(needShowMIPError && MIPError){
+            $("#mip_ok").addClass('hidden');
+            $("#mip_error").removeClass('hidden');
+        }
         if(needShowFirstTIError && !firstTIError){
             $("#ti1_error").addClass('hidden');
             $("#ti1_ok").removeClass('hidden');
@@ -346,6 +367,10 @@
         if(needShowWeatherStationError && !weatherStationError){
             $("#ws_error").addClass('hidden');
             $("#ws_ok").removeClass('hidden');
+        }
+        if(needShowMIPError && !MIPError){
+            $("#mip_error").addClass('hidden');
+            $("#mip_ok").removeClass('hidden');
         }
     }
     $(".messageCross").each(function (){

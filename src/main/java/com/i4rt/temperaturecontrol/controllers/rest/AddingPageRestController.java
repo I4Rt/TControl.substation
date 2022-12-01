@@ -8,11 +8,19 @@ import com.i4rt.temperaturecontrol.model.ControlObject;
 import com.i4rt.temperaturecontrol.model.User;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.SchemaOutputResolver;
 import java.io.IOException;
+import java.net.http.HttpHeaders;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +38,13 @@ public class AddingPageRestController {
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
 
+    private boolean getUserIsAccessed(){
+        User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        return curUser.getThermalImagerGrabbed();
+    }
+
+
+
     public AddingPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
@@ -39,14 +54,37 @@ public class AddingPageRestController {
     }
 
     @RequestMapping(value = "getCoordinatesById", method = RequestMethod.POST)
-    public String getCoordinates(@RequestParam Long id){
+    public String getCoordinates(HttpServletRequest request, HttpServletResponse response, @RequestParam Long id) throws IOException, ServletException {
+
+        if(!getUserIsAccessed()) {
+            return "doubleUsers";
+        }
+
 
         ControlObject controlObject = controlObjectRepo.getById(id);
         Map<String, Object> data = new HashMap<>();
         ThermalImager ti = controlObject.getThermalImager();
+
+
+
         if(ti != null) {
-
-
+//            Integer i = 0;
+//            while(ti.getIsBusy()){
+//                try{
+//                    Thread.sleep(500);
+//                }
+//                catch (Exception e){
+//                    System.out.println("Waiting for thermal imager not busy error: " + e);
+//                }
+//                finally{
+//                    i += 1;
+//                    if(i > 100){
+//                        break;
+//                    }
+//                }
+//                ti = thermalImagerRepo.getById(ti.getId());
+//            }
+//
 
             data.put("id", id);
             data.put("tiID", controlObject.getThermalImager().getId());
@@ -69,11 +107,17 @@ public class AddingPageRestController {
             data.put("tiID", "null");
         }
         String jsonStringToSend = JSONObject.valueToString(data);
+//        ti.setIsBusy(false);
+//        thermalImagerRepo.save(ti);
         return jsonStringToSend;
     }
 
     @RequestMapping(value = "setCoordinatesThermalViewer", method = RequestMethod.POST)
-    public String setCoordinates(@RequestBody String rowDataJson){
+    public String setCoordinates(HttpServletRequest request, HttpServletResponse response, @RequestBody String rowDataJson) throws IOException, ServletException {
+
+        if(!getUserIsAccessed()) {
+            return "doubleUsers";
+        }
 
         JSONObject data = new JSONObject(rowDataJson);
         Long searchControlObjectId = data.getLong("id");
@@ -101,19 +145,44 @@ public class AddingPageRestController {
 
         controlObjectRepo.save(controlObject);
 
+
         return "Координаты объекта контроля изменены";
     }
 
     @RequestMapping(value = "gotoAndGetImage", method = RequestMethod.POST)
-    public String gotoAndGetImage(@RequestBody String rowDataJson){
+    public String gotoAndGetImage(HttpServletRequest request, HttpServletResponse response, @RequestBody String rowDataJson) throws IOException, ServletException {
+
+        if(!getUserIsAccessed()) {
+            return "doubleUsers";
+        }
+
         JSONObject gotData = new JSONObject(rowDataJson);
 
         Long tiID = gotData.getLong("tiId");
         Double vertical = gotData.getDouble("vertical");
         Double horizontal = gotData.getDouble("horizontal");
         Double focusing = gotData.getDouble("focusing");
-
         ThermalImager ti = thermalImagerRepo.getById(tiID);
+//        Integer i = 0;
+//        while(ti.getIsBusy()){
+//            try{
+//                Thread.sleep(500);
+//            }
+//            catch (Exception e){
+//                System.out.println("Waiting for thermal imager not busy error: " + e);
+//            }
+//            finally{
+//                i += 1;
+//                if(i > 100){
+//                    break;
+//                }
+//            }
+//            ti = thermalImagerRepo.getById(tiID);
+//        }
+//
+//        ti.setIsBusy(true);
+//        thermalImagerRepo.save(ti);
+
         Map<String, Object> data = new HashMap<>();
 
 
@@ -163,7 +232,8 @@ public class AddingPageRestController {
 //
 //
         String jsonStringToSend = JSONObject.valueToString(data);
-
+//        ti.setIsBusy(false);
+//        thermalImagerRepo.save(ti);
         return jsonStringToSend;
     }
 
@@ -175,19 +245,32 @@ public class AddingPageRestController {
     }
 
     @RequestMapping(value = "autoFocusing", method = RequestMethod.POST)
-    public String autoFocusing(@RequestParam(name = "thermalImagerId") Long id){
+    public String autoFocusing(HttpServletRequest request, HttpServletResponse response, @RequestParam(name = "thermalImagerId") Long id) throws IOException, ServletException {
+        if(!getUserIsAccessed()) {
+            return "doubleUsers";
+        }
+
         Map<String, Object> result = new HashMap<>();
         try {
 
         ThermalImager ti = thermalImagerRepo.getById(id);
+        Integer focus = ti.setAutoFocus();
+        if(focus != -1){
+            result.put("focus", focus);
 
-        result.put("focus", ti.setAutoFocus());
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
 
-        HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
+            httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
 
-        httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
+            result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
+        }
+        else{
+            result.put("focus", 500);
+            result.put("newUrl", "img/disconnect.png");
+            result.put("message", "Соединение с тепловизором не установлено.");
 
-        result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
+        }
+
 
         String jsonStringToSend = JSONObject.valueToString(result);
         return jsonStringToSend;

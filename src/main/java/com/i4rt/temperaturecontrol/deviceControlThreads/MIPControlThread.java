@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MIPMeasurementRepo;
 import com.i4rt.temperaturecontrol.model.MIPMeasurement;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,8 @@ public class MIPControlThread extends Thread{
                 in  = new BufferedReader(new InputStreamReader(oracle.openStream()));
 
                 while (true){
+                    AlertHolder alertHolder = AlertHolder.getInstance();
+                    alertHolder.setMIPError(false);
                     String resultString = in.readLine();
                     if(resultString != null){
                         if(resultString.length() > 20){
@@ -73,6 +76,8 @@ public class MIPControlThread extends Thread{
                     }
                 }
             } catch (Exception e) {
+                AlertHolder alertHolder = AlertHolder.getInstance();
+                alertHolder.setMIPError(true);
                 if(in != null){
                     in.close();
                 }

@@ -69,7 +69,7 @@ public class ThermalImager {
         Random random = new Random();
         random.setSeed(System.currentTimeMillis());
 
-        return random.nextDouble() % 10 * 10 + 50.0;
+        return random.nextDouble() % 10 * 10 + 30.0;
     }
 
     public Double getCurHorizontal(){
@@ -117,8 +117,7 @@ public class ThermalImager {
                 Thread.sleep(200);
                 parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
-                System.out.println(Double.parseDouble(parsedAnswer.get("elevation")) + " " + vertical / 10);
-                System.out.println(Double.parseDouble(parsedAnswer.get("azimuth")) + " " + horizontal / 10);
+
                 System.out.println("tryCounter: " + tryCounter);
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
@@ -149,12 +148,12 @@ public class ThermalImager {
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20)){
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30)){
                             Thread.sleep(200);
 
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30);
                         }
                         else{
                             System.out.println("focused");
@@ -162,6 +161,7 @@ public class ThermalImager {
                         }
 
                         if(focusingCounter > 50){
+                            System.out.println("Too many trys");
                             return false;
                         }
                     }
@@ -170,6 +170,7 @@ public class ThermalImager {
                 }
 
                 if(tryCounter > 50){
+                    System.out.println("Too many trys");
                     return false;
                 }
 
@@ -244,7 +245,7 @@ public class ThermalImager {
                                 "    <lookDownUpAngle>0.00</lookDownUpAngle>\n" +
                                 "</PTZAbsoluteEx>";
                         System.out.println("focusing");
-                        System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
+                        System.out.println("focusing result: " + httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
                         Thread.sleep(200);
 
@@ -253,16 +254,17 @@ public class ThermalImager {
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20)){
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30)){
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 20 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 20);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30);
                         }
                         else{
                             System.out.println("focused");
                             break;
                         }
                         if(focusingCounter > 30){
+                            System.out.println("Can not focusing for this value");
                             return false;
                         }
                     }
@@ -297,7 +299,7 @@ public class ThermalImager {
             }
 
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Goto coordinates error: " + e);
             return false;
         }
 
@@ -306,12 +308,15 @@ public class ThermalImager {
     public String gotoAndGetImage(Double horizontal, Double vertical, Double focusing){
         try {
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
-            
+            System.out.println("SENDER created");
             Boolean gotoResult = gotoCoordinatesNoConfig(horizontal, vertical, focusing);
+            System.out.println("went To Coordinates No Config");
             System.out.println(gotoResult);
             if(gotoResult){
                 // получить новое фото и сохранить его с новым индексом
+                System.out.println("preparing for image getting");
                 httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
+                System.out.println("ImageGot");
                 return "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg"; //!
             }
             else{
@@ -319,7 +324,7 @@ public class ThermalImager {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Goto coordinates error(no config): " + e);
             return "conError";
         }
     }
@@ -338,10 +343,11 @@ public class ThermalImager {
                 httpSenderService.saveImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + calendar.get(Calendar.DAY_OF_MONTH) +"_"+ (calendar.get(Calendar.MONTH) + 1) + "\\" + areaName, "/ISAPI/Streaming/channels/2/picture", calendar.get(Calendar.HOUR_OF_DAY) + "_" + calendar.get(Calendar.MINUTE) + "_" +calendar.get(Calendar.SECOND));
                 return "ok"; //!
             }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Goto and save image error: " + e);
         }
-        System.out.println("gotoAndSaveImage Error");
+
         return "error";
     }
 
@@ -400,15 +406,12 @@ public class ThermalImager {
                     "</ThermometryRegion>" ;
 
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
-            
-
 
             System.out.println(httpSenderService.sendPutRequest("/ISAPI/Thermal/channels/2/thermometry/1/regions/1", body)); // Need errors handler
             return "ok";
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Configure area error: " + e);
         }
-        System.out.println("configureArea Error");
         return "error";
     }
 
@@ -433,7 +436,7 @@ public class ThermalImager {
             return temperature;
 
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Getting temperature error: " + e);
         }
 
         return null;
@@ -495,11 +498,23 @@ public class ThermalImager {
         try {
             this.needReboot = false;
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
-            System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absolute", null));
+            System.out.println(httpSenderService.sendPutRequest("/ISAPI/System/reboot", ""));
             //ISAPI/System/reboot
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Reboot error: " + e);
+            return "conError";
+        }
+        return "ok";
+    }
+
+    public String status(){
+        try {
+            HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
+            System.out.println("status: "  + httpSenderService.sendGetRequest("/ISAPI/System/status"));
+        }
+        catch (Exception e) {
+            System.out.println("Status error: " + e);
             return "conError";
         }
         return "ok";

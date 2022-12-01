@@ -43,12 +43,22 @@ public class MainRestController {
     @RequestMapping(value = "getWeather", method = RequestMethod.POST)
     public String getWeather(){
         WeatherMeasurement weatherMeasurement = weatherMeasurementRepo.getLastWeatherMeasurement();
+        if(weatherMeasurement != null){
+            return "<text>v: " + weatherMeasurement.getWindForce() + " м/с</text>" +
+                    "<text>φ: " + weatherMeasurement.getHumidity() + "%</text>" +
+                    "<text>t: " + weatherMeasurement.getTemperature() + "°</text>" +
+                    "<text>p: " + weatherMeasurement.getAtmospherePressure() + " Атм</text>" +
+                    "<text>t: " + weatherMeasurement.getRainfall() + " мм</text>";
+        }
+        else{
+            return "<text>v: ? м/с</text>" +
+                    "<text>φ: ?%</text>" +
+                    "<text>t: ?°</text>" +
+                    "<text>p: ? Атм</text>" +
+                    "<text>t: ? мм</text>";
+        }
 
-        return "<text>v: " + weatherMeasurement.getWindForce() + " м/с</text>" +
-                "<text>φ: " + weatherMeasurement.getHumidity() + "%</text>" +
-                "<text>t: " + weatherMeasurement.getTemperature() + "°</text>" +
-                "<text>p: " + weatherMeasurement.getAtmospherePressure() + " Атм</text>" +
-                "<text>t: " + weatherMeasurement.getRainfall() + " мм</text>";
+
     }
 
     @RequestMapping(value = "resetConnections", method = RequestMethod.GET)
@@ -73,6 +83,7 @@ public class MainRestController {
         preparedToSendData.put("thirdTIError", alertHolder.getThirdTIError());
         preparedToSendData.put("fourthTIError", alertHolder.getFourthTIError());
         preparedToSendData.put("weatherStationError", alertHolder.getWeatherStationError());
+        preparedToSendData.put("MIPError", alertHolder.getMIPError());
 
         String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
         return jsonStringToSend;

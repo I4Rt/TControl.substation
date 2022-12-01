@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MIPMeasurementRepo;
 import com.i4rt.temperaturecontrol.model.MIPMeasurement;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ public class MIPSaver extends Thread{
 
 
     private MIPMeasurementRepo MIPMeasurementRepo;
+
 
 
     public MIPSaver(MIPMeasurementRepo voltageMeasurementRepo){

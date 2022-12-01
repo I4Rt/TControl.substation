@@ -49,6 +49,7 @@ public class AreaPageRestController {
             System.out.println(data.getString("name"));
             System.out.println(data.getDouble("warningTemp"));
             System.out.println(data.getDouble("dangerTemp"));
+            System.out.println(data.getString("MIPChanel"));
 
 
             ControlObject curControlObject = new ControlObject();
@@ -60,6 +61,7 @@ public class AreaPageRestController {
                     curControlObject.setName(data.getString("name"));
                     curControlObject.setWarningTemp(data.getDouble("warningTemp"));
                     curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
+                    curControlObject.setVoltageMeasurementChannel(data.getString("MIPChanel"));
                     if(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).size() != 0){
                         if(! measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature().equals(null)){
                             curControlObject.updateTemperatureClass(measurementRepo.getMeasurementByAreaId(curControlObject.getId(), 1).get(0).getTemperature(), weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
@@ -73,6 +75,7 @@ public class AreaPageRestController {
                 curControlObject.setName(data.getString("name"));
                 curControlObject.setWarningTemp(data.getDouble("warningTemp"));
                 curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
+                curControlObject.setVoltageMeasurementChannel(data.getString("MIPChanel"));
             }
 
 
@@ -133,34 +136,43 @@ public class AreaPageRestController {
         // getting images names:
         result.put("imagesNames", new ArrayList<String>());
 
-        if(((ArrayList<Date>) result.get("time")).size() > 2){
+        if(((ArrayList<Date>) result.get("time")).size() > 1){
             Date beginningDate = ((ArrayList<Date>) result.get("time")).get(0);
             Date endingDate = ((ArrayList<Date>) result.get("time")).get(((ArrayList<Date>) result.get("time")).size() - 1);
-
+            try {
+                beginningDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS").parse(beginningDate.toString());
+                endingDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS").parse(endingDate.toString());
+            } catch (ParseException e) {
+                System.out.println("Date parse error");
+            }
             File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
             File[] listOfFiles = folder.listFiles();
 
             for (int i = 0; i < listOfFiles.length; i++) {
+                //System.out.println("folder: " + listOfFiles[i].getName());
                 File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
                 File[] listOfInsideFolders = insideFolder.listFiles();
 
                 for(int j = 0; j < listOfInsideFolders.length; j++){
-                    System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
+                    //System.out.println("area folder: " + listOfInsideFolders[j].getName());
+                    //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
                     if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
+
                         File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
                         File[] listOfInsideFiles = insideFiles.listFiles();
                         Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
 
                         for(int n = 0; n < listOfInsideFiles.length; n++){
+                            //System.out.println("image: " + listOfInsideFiles[n].getName());
                             Date tempDate = null; // select year!
                             try {
                                 tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-                                System.out.println("temp date: " + tempDate);
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
-
-                            if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
+                            //System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0));
+                            if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
+                                //System.out.println("append image");
                                 ((ArrayList<String>)result.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
                             }
                         }
@@ -256,7 +268,7 @@ public class AreaPageRestController {
                 File[] listOfInsideFolders = insideFolder.listFiles();
 
                 for(int j = 0; j < listOfInsideFolders.length; j++){
-                    System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
+                    //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
                     if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
                         File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
                         File[] listOfInsideFiles = insideFiles.listFiles();

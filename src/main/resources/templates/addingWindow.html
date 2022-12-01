@@ -62,7 +62,7 @@
                     <div class="step"><text>Шаг переноса:</text> <input id="step" type="text" value="5.0"></div>
                     <div class="declination"><text>Горизонтальное склонение:</text> <input class="change" th:value="${horizontal}" id="horizontal" type="text" value="32.0"></div>
                     <div class="declination"><text>Вертикальное склонение:</text> <input class="change" th:value="${vertical}" id="vertical" type="text" value="11.0"></div>
-                    <div class="focusing"><text>Фокусировка:</text> <input class="change" type="number" min="200" max="5000" th:value="${focusing}" id="focusing"></div>
+                    <div class="focusing"><text>Фокусировка:</text> <input class="change" type="number" min="500" max="5000" th:value="${focusing}" id="focusing"></div>
                 </div>
             </div>
         </div>
@@ -139,6 +139,10 @@
         <div class="text green">Подключение к метеостанции восстановлено</div>
         <div class="messageCross green">X</div>
     </div>
+    <div class="message green hidden" id="mip_ok">
+        <div class="text green">Подключение к MIP</div>
+        <div class="messageCross green">X</div>
+    </div>
     <div class="message red hidden" id="ti1_error">
         <div class="text red">Отсутствует подключение к тепловизору 1</div>
         <div class="messageCross red">X</div>
@@ -159,6 +163,10 @@
         <div class="text red">Отсутствует подключение к метеостанции</div>
         <div class="messageCross red">X</div>
     </div>
+    <div class="message red hidden" id="mip_error">
+        <div class="text red">Отсутствует подключение к МИП</div>
+        <div class="messageCross red">X</div>
+    </div>
 </div>
 </body>
 
@@ -173,12 +181,14 @@
     let needShowThirdTIError = true;
     let needShowFourthTIError = true;
     let needShowWeatherStationError = true;
+    let needShowMIPError= true;
     let needBeep = false;
     let firstTIError = false;
     let secondTIError = false;
     let thirdTIError = false;
     let fourthTIError = false;
     let weatherStationError = false;
+    let MIPError = false;
 
     let busy = false;
     let waiting = false;
@@ -258,7 +268,7 @@
             return;
         }
         dataToSend["id"] = currentChanging;
-        dataToSend["tiID"] = 1;
+        dataToSend["tiID"] = $('.active').attr('id');
         dataToSend["horizontal"] = parseFloat($("#horizontal").val());
         dataToSend["vertical"] = parseFloat($("#vertical").val());
         dataToSend["focusing"] = parseFloat($("#focusing").val());
@@ -281,6 +291,9 @@
         })
             .then((response) => {
                 response.text().then(function (data){
+                    if(data == "doubleUsers"){
+                        window.location.replace("doubleUsers");
+                    }
                     alert(data)
                 });
             })
@@ -303,6 +316,9 @@
             })
                 .then((response) => {
                     response.text().then(function (data){
+                        if(data == "doubleUsers"){
+                            window.location.replace("doubleUsers");
+                        }
                         busy = false;
                         //1001001
                         currentData = JSON.parse(data);
@@ -336,8 +352,7 @@
                             $(".gotImg").attr("src", currentData["newUrl"]);
                             console.log(currentData["newUrl"])
 
-                            $(".active").removeClass("active");
-                            $("#" + currentData["tiID"]).addClass("active")
+
 
                             let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
                             console.log(areaDiv);
@@ -512,15 +527,20 @@
                 body: JSON.stringify(bodyToGoto),
             })
             .then((response) => {
-                response.text().then(function (data){
-
-                    currentData = JSON.parse(data);
-                    console.log(data)
+                response.text().then(function (localData){
+                    if(localData == "doubleUsers"){
+                        alert(window.location.href)
+                        window.location.replace("doubleUsers");
+                    }
+                    currentData = JSON.parse(localData);
+                    console.log(localData)
 
                     if(currentData["newUrl"] == 'error'){
                         allowed = false;
                         busy = false;
-                        moveAndView();
+                        //alert('Не удалось получить изображение');
+                        moveAndView()
+
                     }
                     else if(currentData["newUrl"] == 'errorBusy'){
                         allowed = false;
@@ -532,7 +552,7 @@
                         $('.gotImg').attr('src', 'img/disconnect.png')
                         alert('Соединение с тепловизором не установлено.')
                     }
-                    else if(currentData["status"] == 500){
+                    else if(currentData["status"] == 800){
                         allowed = false;
                         $('.gotImg').attr('src', 'img/disconnect.png')
                         alert('Произошла ошибка. Попробуйте снова.')
@@ -583,7 +603,7 @@
                     $(".sector").remove();
                     $('#horizontal').val(0)
                     $('#vertical').val(0)
-                    $('#focusing').val(500)
+                    $('#focusing').val(800)
                     moveAndView();
                 }
                 else{
@@ -664,8 +684,8 @@
 
     $("#autoFocusing").click(function (){
         if(!busy){
-            console.log("/autoFocusing?thermalImagerId=" + $(".active").attr('id'))
             busy = true;
+            $(".gotImg").attr("src", "img/loading.gif");
             fetch("/autoFocusing?thermalImagerId=" + parseInt($(".active").attr('id')), { //ID!!!
                 method: "POST",
                 headers: {
@@ -674,10 +694,17 @@
                 body: null,
             })
                 .then((response) => {
-                    response.text().then(function (data){
 
+                    response.text().then(function (data){
+                        if(data == "doubleUsers"){
+                            alert(window.location.href)
+                            window.location.replace("doubleUsers");
+                        }
                         currentData = JSON.parse(data);
-                        console.log(currentData);
+                        console.log(currentData['message']);
+
+                        if(currentData['message'])
+                            alert(currentData['message'])
 
                         $(".gotImg").attr("src", currentData["newUrl"]);
                         $("#focusing").val(currentData["focus"]);
@@ -696,7 +723,7 @@
 
         }
         else {
-            console.log("too busy for focusing")
+            alert('Соединение с тепловизором не установлено.')
         }
 
     })
@@ -765,7 +792,13 @@
                         needShowWeatherStationError = true;
                     }
                     else {
-                        needShowWeatherStationError = false
+                        needShowWeatherStationError = false;
+                    }
+                    if(MIPError != insideData["MIPError"]){
+                        needShowMIPError = true;
+                    }
+                    else {
+                        needShowMIPError = false;
                     }
                     needBeep = insideData["beep"];
                     firstTIError = insideData["firstTIError"];
@@ -773,6 +806,7 @@
                     thirdTIError = insideData["thirdTIError"];
                     fourthTIError = insideData["fourthTIError"];
                     weatherStationError = insideData["weatherStationError"];
+                    MIPError = insideData["MIPError"];
                     updateAlerts();
                     if(needBeep){
                         beep();
@@ -805,6 +839,10 @@
             $("#ws_ok").addClass('hidden');
             $("#ws_error").removeClass('hidden');
         }
+        if(needShowMIPError && MIPError){
+            $("#mip_ok").addClass('hidden');
+            $("#mip_error").removeClass('hidden');
+        }
         if(needShowFirstTIError && !firstTIError){
             $("#ti1_error").addClass('hidden');
             $("#ti1_ok").removeClass('hidden');
@@ -824,6 +862,10 @@
         if(needShowWeatherStationError && !weatherStationError){
             $("#ws_error").addClass('hidden');
             $("#ws_ok").removeClass('hidden');
+        }
+        if(needShowMIPError && !MIPError){
+            $("#mip_error").addClass('hidden');
+            $("#mip_ok").removeClass('hidden');
         }
     }
     $(".messageCross").each(function (){

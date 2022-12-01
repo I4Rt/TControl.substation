@@ -3,7 +3,6 @@
     top: 30px;
     right: 10px;
     width: 200px;
-    max-height: 70%;
     overflow-y: auto;
 
     display: flex;
