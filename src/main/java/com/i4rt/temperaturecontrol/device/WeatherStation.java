@@ -44,7 +44,7 @@ public class WeatherStation {
     }
 
 
-    public void makeMeasurements() throws Exception{
+    public void makeMeasurements() {
         SerialParameters sp = new SerialParameters();
         Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
         try {
@@ -64,18 +64,15 @@ public class WeatherStation {
                 sp.setStopBits(1);
                 System.out.println("before modbus");
                 ModbusMaster m = ModbusMasterFactory.createModbusMasterRTU(sp);
-                try{
+                m.connect();
+                System.out.println("after modbus");
 
+                // Адрес метеостанции
+                int slaveId = 0x33;
 
-                    m.connect();
-                    System.out.println("after modbus");
-
-                    // Адрес метеостанции
-                    int slaveId = 0x33;
-
-                    // Опрашиваемый регистр, 6 - температура
-
-                    int quantity = 1;
+                // Опрашиваемый регистр, 6 - температура
+                int offset = 6;
+                int quantity = 1;
 
                     this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
                     this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
@@ -85,28 +82,37 @@ public class WeatherStation {
 
                     System.out.println(this.toString());
 
+                this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
+                this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
+                this.humidity = getValues(m, slaveId, 7, quantity)/10.0;
+                this.atmospherePressure = getValues(m, slaveId, 8, quantity)/10.0;
+                this.rainfall = getValues(m, slaveId, 9, quantity)/10.0;
 
+                System.out.println(this.toString());
+
+                try {
                     m.disconnect();
                 } catch (ModbusIOException e1) {
-                    m.disconnect();
-                    throw e1;
                 }
             }
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw e;
+            e.printStackTrace();
         }
 
     }
+
 
     protected static int getValues(ModbusMaster m, int slaveId, int offset, int quantity){
         int value = 0;
         try {
             System.out.println("before reading");
+            System.out.println(m.isConnected());
             int[] registerValues = m.readHoldingRegisters(slaveId, offset, quantity);
+            System.out.println("check");
             value = registerValues[0];
-            System.out.println("Address: " + offset++ + ", Value: " + value);
+            System.out.println("Address: " + offset + ", Value: " + value);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -115,8 +121,4 @@ public class WeatherStation {
 
         return value;
     }
-
-
-
-
 }

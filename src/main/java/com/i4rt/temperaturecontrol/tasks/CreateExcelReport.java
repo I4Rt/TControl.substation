@@ -1,10 +1,7 @@
 package com.i4rt.temperaturecontrol.tasks;
 
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
-import com.i4rt.temperaturecontrol.model.ControlObject;
-import com.i4rt.temperaturecontrol.model.Measurement;
-import com.i4rt.temperaturecontrol.model.MeasurementData;
-import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
+import com.i4rt.temperaturecontrol.model.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.chart.*;
@@ -32,15 +29,17 @@ public class CreateExcelReport {
     private final UserRepo userRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
-
+    @Autowired
+    private final MIPMeasurementRepo mipMeasurementRepo;
 
     public CreateExcelReport(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo,
-                      UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo){
+                      UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo){
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
+        this.mipMeasurementRepo = mipMeasurementRepo;
     }
 
     public String createMainSheet(Date beginningDate, Date endingDate) throws IOException {
@@ -120,15 +119,15 @@ public class CreateExcelReport {
             int numCellDate = 0;
             int numCellValue = 1;
             int numCellWeather = 4;
+            int numCellMip = 5;
 
             System.out.println("\nGet total values\n");
 
             ArrayList<Object> allData = getTotalValues(controlObject, weatherMeasurementRepo,
-                    measurementRepo, beginningDate, endingDate);
+                    measurementRepo, mipMeasurementRepo, beginningDate, endingDate);
             ArrayList<Date> totalDates = (ArrayList<Date>) allData.get(0);
             Collections.sort(totalDates);
             Map<Date, Object> preparedToSendData = (Map<Date, Object>) allData.get(1);
-
 
             if(preparedToSendData.isEmpty()){
                 continue;
@@ -150,25 +149,35 @@ public class CreateExcelReport {
                     rowCount++;
                     Double weatherTemp = 0.0;
                     Double temp = 0.0;
+                    Double mipPower = 0.0;
                     Double maxWeatherTemp = -273.0;
                     Double maxTemp = -273.0;
+                    Double maxMipPower = -273.0;
 
                     int weatherCount = 0;
                     int thermalCount = 0;
+                    int mipCount = 0;
                     for (int j = 0; j < minuteDates.size(); j++){
                         if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement){
-                            Double temperature = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-                            System.out.println("w: " + temperature);
-                            weatherTemp += temperature;
+                            Double value = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+                            System.out.println("w: " + value);
+                            weatherTemp += value;
                             weatherCount++;
-                            if (temperature >= maxWeatherTemp) maxWeatherTemp = temperature;
+                            if (value >= maxWeatherTemp) maxWeatherTemp = value;
                         }
-                        else if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement){
-                            Double temperature = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-                            System.out.println("t: " + temperature);
-                            temp += temperature;
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement){
+                            Double value = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+                            System.out.println("t: " + value);
+                            temp += value;
                             thermalCount++;
-                            if (temperature >= maxTemp) maxTemp = temperature;
+                            if (value >= maxTemp) maxTemp = value;
+                        }
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement){
+                            Double value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerA();
+                            System.out.println("m: " + value);
+                            mipPower += value;
+                            mipCount++;
+                            if (value >= maxMipPower) maxMipPower = value;
                         }
                     }
                     Row rowInf = cellSheet.createRow(rowCount);
@@ -185,6 +194,10 @@ public class CreateExcelReport {
                     Cell cellWeather = rowInf.createCell(numCellWeather);
                     if (weatherCount != 0) cellWeather.setCellValue(weatherTemp/weatherCount);
                     else cellWeather.setBlank();
+
+                    Cell cellMip = rowInf.createCell(numCellMip);
+                    if (mipCount != 0) cellMip.setCellValue((mipPower/mipCount)/1000);
+                    else cellMip.setBlank();
 
                     cal.setTime(totalDates.get(i));
                     cal.add(Calendar.MINUTE, 1);
@@ -222,6 +235,9 @@ public class CreateExcelReport {
 
             createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
                     numCellWeather, numCellWeather, "Температура воздуха", data);
+
+            createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
+                    numCellMip, numCellMip, "Измерения с МИП, значение*1000", data);
 
             // пропуски соединяются линией
             chart.displayBlanksAs(DisplayBlanks.SPAN);
@@ -269,12 +285,13 @@ public class CreateExcelReport {
 
     public static ArrayList<Object> getTotalValues(ControlObject controlObject,
                                                    WeatherMeasurementRepo weatherMeasurementRepo,
-                                                   MeasurementRepo measurementRepo, Date beginningDate,
+                                                   MeasurementRepo measurementRepo,
+                                                   MIPMeasurementRepo mipMeasurementRepo, Date beginningDate,
                                                    Date endingDate){
         ArrayList<MeasurementData> measurements = new ArrayList<>();
         measurements.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate));
         measurements.addAll( measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(), beginningDate, endingDate));
-
+        measurements.addAll( mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginningDate, endingDate));
         Map<Date, Object> preparedToSendData = new HashMap<>();
         ArrayList<Date> totalDates = new ArrayList<>();
 
@@ -292,6 +309,12 @@ public class CreateExcelReport {
                 totalDates.add(finObj.getDatetime());
                 preparedToSendData.put(finObj.getDatetime(), finObj);
             }
+            else if (obj instanceof MIPMeasurement){
+                MIPMeasurement finObj = (MIPMeasurement) obj;
+                totalDates.add(finObj.getDatetime());
+                preparedToSendData.put(finObj.getDatetime(), finObj);
+            }
+
         }
 
         ArrayList<Object> results = new ArrayList<>();

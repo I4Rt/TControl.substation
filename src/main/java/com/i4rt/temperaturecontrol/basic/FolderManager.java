@@ -24,38 +24,24 @@ public class FolderManager {
             File file = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
             String[] directories = file.list();
 
-            for (String area: directories){
-                File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + area);
-                String[] areas = folder.list();
-                for (String folderArea: areas){
-                    File nameArea = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\"
-                            + area + "\\" + folderArea);
-                    if (folderArea.equals(lastName)) {
-                        File newNameArea = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\"
-                                + area + "\\" + newName);
-                        nameArea.renameTo(newNameArea);
+            try{
+                for (String area: directories){
+                    File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + area);
+                    String[] areas = folder.list();
+                    for (String folderArea: areas){
+                        File nameArea = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\"
+                                + area + "\\" + folderArea);
+                        if (folderArea.equals(lastName)) {
+                            File newNameArea = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\"
+                                    + area + "\\" + newName);
+                            nameArea.renameTo(newNameArea);
+                        }
                     }
+                    System.out.println(Arrays.toString(areas));
                 }
-                System.out.println(Arrays.toString(areas));
+            } catch (Exception e){
+                e.printStackTrace();
             }
-
-
-//        String[] directories = file.list(new FilenameFilter() {
-//            @Override
-//            public boolean accept(File current, String name) {
-//                return new File(current, name).isDirectory();
-//            }
-//        });
-//        for (String area: directories){
-//            File file1 = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + area);
-//            String[] file1Directories = file1.list(new FilenameFilter() {
-//                @Override
-//                public boolean accept(File current, String name) {
-//                    return new File(current, name).isDirectory();
-//                }
-//            });
-//            System.out.println(Arrays.toString(file1Directories));
-//        }
 
     }
     // remove all folders before date
