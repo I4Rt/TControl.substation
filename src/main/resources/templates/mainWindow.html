@@ -60,10 +60,8 @@
         <a href="/report">Сформировать отчет</a>
     </div>
     <div class="dropdown directions hidden">
-        <a>Проверить связь</a>
-        <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
-        <a id="startScanning">Возобновить сканирование</a>
-        <a id="activateWipers">Инициализировать дворники</a>
+        <a id="refreshConnections">Перезапустить подключения сканеров</a>
+        <a id="reboot">Перезапустить тепловизоры</a>
     </div>
     <div class="dropdown user hidden">
         <div class="myColumn">
@@ -83,29 +81,32 @@
     </div>
 
     <div class="uploadWindow myColumn hidden">
+        <div class="topperAdderBar"></div>
         <div class="cross">X</div>
         <div class="uploadInfo">Новая подложка</div>
-        <form class="myRow" action="setNewMap" method="POST" enctype="multipart/form-data">
+        <form class="myRow" action="setNewMap" method="POST"  style="margin-top: 30px !important" enctype="multipart/form-data">
             <input type="file" name="image" accept="image/png"/>
             <input type="submit" name="setNewButton">
         </form>
         <div class="myRow center">
-            Принимаются изображения только в <b>png</b> формате
+            <text style="font-size: 10px">
+                Принимаются изображения только в <b>png</b> формате
+            </text>
+
+        </div>
+    </div>
+    <div class="myColumn parentChooseObjectWindow hidden" style="padding: 10px 0px 0px;z-index: 15;position: absolute;display: block;left: calc(50% - 150px);top: calc(50% - 225px);width: 300px;height: 425px; filter:drop-shadow(0px 2px 4px rgba(0,0,0, 0.4));">
+        <div class="topperAdderBar"></div>
+        <div class="cross" id="closeObjectWindow" style="position: absolute; right: 10px">X</div>
+        <div class="uploadInfo" style="position: absolute; left: 10px">Выберите объект</div>
+        <div class="myColumn chooseObjectWindow" style="margin-top: 35px !important;">
+            <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:name="${controlObject.id}" >
+                <text th:utext="${controlObject.name}"></text>
+                <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
+            </div>
         </div>
     </div>
 
-    <div class="myColumn chooseObjectWindow hidden">
-        <div class="myRow reversed">
-            <div id="closeObjectWindow">X</div>
-        </div>
-        <div class="myRow" style="height: min-content; margin: 0;">
-            <h4 style="height: min-content; margin: 0;">Выберите объект контроля</h4>
-        </div>
-        <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:name="${controlObject.id}" >
-            <text th:utext="${controlObject.name}"></text>
-            <div class="marker" th:classappend="${controlObject.temperatureClass}"></div>
-        </div>
-    </div>
 
     <div class="messageHolder">
         <div class="message green hidden" id="ti1_ok">
@@ -313,6 +314,10 @@
     $(document).click(function (e){
         console.log("document click")
         console.log(readyToAddNew)
+
+        if(readyToAddNew > 0){
+            needDelete = false;
+        }
         if (readyToAddNew == 1){
             if(e.pageX > offset.left && e.pageX < offset.left + 800 && e.pageY > offset.top && e.pageY < offset.top + 600){
                 newX = e.pageX - offset.left - 11;
@@ -347,12 +352,12 @@
     $("#newMarker").click(function (){
         //$(".maxSize").attr("style", "cursor: pointer");
         console.log("Ready to add")
-        $(".chooseObjectWindow").removeClass("hidden");
+        $(".parentChooseObjectWindow").removeClass("hidden");
         $(".chooseObjectWindow>.areaInfo").each(function (){
             $(this).click(function (){
                 preparedToAddElementId = $(this).attr('name');
                 console.log("magic: "+ preparedToAddElementId);
-                $(".chooseObjectWindow").addClass("hidden");
+                $(".parentChooseObjectWindow").addClass("hidden");
                 readyToAddNew = 2;
             });
         });
@@ -369,7 +374,7 @@
     });
 
     $("#closeObjectWindow").click(function (){
-        $(".chooseObjectWindow").addClass("hidden")
+        $(".parentChooseObjectWindow").addClass("hidden")
     })
 
     $("#refreshConnections").click(function (){
@@ -388,6 +393,24 @@
             .catch((error) => {
                 console.error('Error:', error);
             });
+    });
+    $("#reboot").click(function (){
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                alert(data)
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
     });
     function activateMarkers(){
         $('.maxSize>.mapMarker').each(function (){

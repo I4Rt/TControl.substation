@@ -193,18 +193,27 @@ public class AddingPageRestController {
         data.put("horizontal", horizontal);
         data.put("focusing", focusing);
 
-        if(ti.getIsBusy()){
-            data.put("newUrl", "error");
+        Integer sleepTimeCounter = 0;
+        while(ti.getIsBusy()){
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            sleepTimeCounter += 1;
+            if(sleepTimeCounter > 100){
+                data.put("newUrl", "error");
+                String jsonStringToSend = JSONObject.valueToString(data);
+                return jsonStringToSend;
+            }
         }
-        else{
-            try{
-                String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
-                System.out.println(newUrl);
-                data.put("newUrl", newUrl);
-            }
-            catch (Exception e){
-                data.put("newUrl", "conError");
-            }
+        try{
+            String newUrl = ti.gotoAndGetImage(horizontal, vertical, focusing);
+            System.out.println(newUrl);
+            data.put("newUrl", newUrl);
+        }
+        catch (Exception e){
+            data.put("newUrl", "conError");
         }
 
 //        while(ti.getIsBusy()){
@@ -231,9 +240,10 @@ public class AddingPageRestController {
 //
 //
 //
-        String jsonStringToSend = JSONObject.valueToString(data);
+
 //        ti.setIsBusy(false);
 //        thermalImagerRepo.save(ti);
+        String jsonStringToSend = JSONObject.valueToString(data);
         return jsonStringToSend;
     }
 
@@ -265,7 +275,7 @@ public class AddingPageRestController {
             result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
         }
         else{
-            result.put("focus", 500);
+            result.put("focus", 800);
             result.put("newUrl", "img/disconnect.png");
             result.put("message", "Соединение с тепловизором не установлено.");
 

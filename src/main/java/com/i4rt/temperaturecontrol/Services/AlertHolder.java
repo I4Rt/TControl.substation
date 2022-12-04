@@ -36,7 +36,6 @@ public class AlertHolder {
         if(instance == null){
             instance = new AlertHolder();
         }
-        System.out.println("alerts: " + instance);
         return instance;
     }
 }

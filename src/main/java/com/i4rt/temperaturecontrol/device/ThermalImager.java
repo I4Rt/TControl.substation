@@ -500,6 +500,10 @@ public class ThermalImager {
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             System.out.println(httpSenderService.sendPutRequest("/ISAPI/System/reboot", ""));
             //ISAPI/System/reboot
+
+            while(! status().equals("ok")){
+                Thread.sleep(1000);
+            }
         }
         catch (Exception e) {
             System.out.println("Reboot error: " + e);

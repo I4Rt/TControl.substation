@@ -137,31 +137,31 @@ public class AreaPageRestController {
         result.put("imagesNames", new ArrayList<String>());
 
         if(((ArrayList<Date>) result.get("time")).size() > 1){
-            Date beginningDate = ((ArrayList<Date>) result.get("time")).get(0);
-            Date endingDate = ((ArrayList<Date>) result.get("time")).get(((ArrayList<Date>) result.get("time")).size() - 1);
-            try {
-                beginningDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS").parse(beginningDate.toString());
-                endingDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS").parse(endingDate.toString());
-            } catch (ParseException e) {
-                System.out.println("Date parse error");
-            }
+            System.out.println("dates found");
+            Date beginningDate =((ArrayList<Date>) result.get("time")).get(0);
+            Date endingDate =  ((ArrayList<Date>) result.get("time")).get(((ArrayList<Date>) result.get("time")).size() - 1);
+
+            System.out.println("date " + beginningDate + " --> " + endingDate);
+
             File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
             File[] listOfFiles = folder.listFiles();
 
             for (int i = 0; i < listOfFiles.length; i++) {
+                System.out.println("folder");
                 //System.out.println("folder: " + listOfFiles[i].getName());
                 File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
                 File[] listOfInsideFolders = insideFolder.listFiles();
 
                 for(int j = 0; j < listOfInsideFolders.length; j++){
+                    System.out.println("insideFolder");
                     //System.out.println("area folder: " + listOfInsideFolders[j].getName());
                     //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
                     if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
-
+                        System.out.println("CorrectInsideFolder");
                         File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
                         File[] listOfInsideFiles = insideFiles.listFiles();
                         Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
-
+                        System.out.println(listOfInsideFiles.length + "images found");
                         for(int n = 0; n < listOfInsideFiles.length; n++){
                             //System.out.println("image: " + listOfInsideFiles[n].getName());
                             Date tempDate = null; // select year!
@@ -170,7 +170,7 @@ public class AreaPageRestController {
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
-                            //System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0));
+                            System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0));
                             if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
                                 //System.out.println("append image");
                                 ((ArrayList<String>)result.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
@@ -183,7 +183,7 @@ public class AreaPageRestController {
             }
         }
 
-
+        System.out.println("images " + JSONObject.valueToString(result));
 
         return JSONObject.valueToString(result);
     }
@@ -260,94 +260,49 @@ public class AreaPageRestController {
             // getting images names:
             results.put("imagesNames", new ArrayList<String>());
 
-            File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
-            File[] listOfFiles = folder.listFiles();
+            if(((ArrayList<Date>) results.get("time")).size() > 1){
 
-            for (int i = 0; i < listOfFiles.length; i++) {
-                File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
-                File[] listOfInsideFolders = insideFolder.listFiles();
 
-                for(int j = 0; j < listOfInsideFolders.length; j++){
-                    //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
-                    if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
-                        File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
-                        File[] listOfInsideFiles = insideFiles.listFiles();
-                        Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
+                System.out.println("date " + beginningDate + " --> " + endingDate);
 
-                        for(int n = 0; n < listOfInsideFiles.length; n++){
-                            Date tempDate = null; // select year!
-                            try {
-                                tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-                                System.out.println("temp date: " + tempDate);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
+                File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
+                File[] listOfFiles = folder.listFiles();
+
+                for (int i = 0; i < listOfFiles.length; i++) {
+                    System.out.println("folder");
+                    //System.out.println("folder: " + listOfFiles[i].getName());
+                    File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
+                    File[] listOfInsideFolders = insideFolder.listFiles();
+
+                    for(int j = 0; j < listOfInsideFolders.length; j++){
+                        System.out.println("insideFolder");
+                        //System.out.println("area folder: " + listOfInsideFolders[j].getName());
+                        //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
+                        if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
+                            System.out.println("CorrectInsideFolder");
+                            File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
+                            File[] listOfInsideFiles = insideFiles.listFiles();
+                            Arrays.sort(listOfInsideFiles, Comparator.comparingLong(File::lastModified));
+                            System.out.println(listOfInsideFiles.length + "images found");
+                            for(int n = 0; n < listOfInsideFiles.length; n++){
+                                //System.out.println("image: " + listOfInsideFiles[n].getName());
+                                Date tempDate = null; // select year!
+                                try {
+                                    tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                                if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
+                                    //System.out.println("append image");
+                                    ((ArrayList<String>)results.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+                                }
                             }
 
-                            if(endingDate.compareTo(tempDate) <= 0 && beginningDate.compareTo(tempDate) >= 0){
-                                ((ArrayList<String>)results.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
-                            }
+
                         }
                     }
                 }
-
-
-
             }
-
-
-//            System.out.println("In Range begin: " + beginningDate);
-//            System.out.println("In Range end: " + endingDate);
-//
-//            List<Measurement> results = measurementRepo.getMeasurementByDatetimeInRange(searchControlObjectId, beginningDate, endingDate);
-//
-//
-//            Map<String, Object> preparedToSendData = new HashMap<>();
-//
-//            preparedToSendData.put("time", new ArrayList<String>());
-//            preparedToSendData.put("temperature", new ArrayList<Double>());
-//            preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getTemperatureClass());
-//
-//            for(Measurement measurement: results){
-//                ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
-//                ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
-//            }
-//
-//
-//            preparedToSendData.put("imagesNames", new ArrayList<String>());
-//
-//            File folder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData");
-//            File[] listOfFiles = folder.listFiles();
-//
-//            System.out.println("basic: " + listOfFiles.length);
-//
-//            for (int i = 0; i < listOfFiles.length; i++) {
-//                File insideFolder = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName());
-//                File[] listOfInsideFolders = insideFolder.listFiles();
-//
-//                for(int j = 0; j < listOfInsideFolders.length; j++){
-//                    System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
-//                    if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
-//                        File insideFiles = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + listOfFiles[i].getName() + "\\" + listOfInsideFolders[j].getName());
-//                        File[] listOfInsideFiles = insideFiles.listFiles();
-//
-//                        for(int n = 0; n < listOfInsideFiles.length; n++){
-//                            Date tempDate = null; // select year!
-//                            try {
-//                                tempDate = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss").parse(listOfFiles[i].getName() + "_" + Calendar.getInstance().get(Calendar.YEAR) + "_" + listOfInsideFiles[n].getName());
-//                                //System.out.println("temp date: " + tempDate);
-//                            } catch (ParseException e) {
-//                                e.printStackTrace();
-//                            }
-//                            System.out.println("in range ending compare" + endingDate.compareTo(tempDate));
-//                            System.out.println("in range beginning compare" + beginningDate.compareTo(tempDate));
-//                            if((endingDate.compareTo(tempDate) == 1) && beginningDate.compareTo(tempDate) == -1){
-//                                ((ArrayList<String>)preparedToSendData.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            //System.out.println("get images in range: " + preparedToSendData.get("imagesNames"));
 
 
 

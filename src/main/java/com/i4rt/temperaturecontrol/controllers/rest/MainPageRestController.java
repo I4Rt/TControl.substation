@@ -98,7 +98,7 @@ public class MainPageRestController {
         System.out.println("objects to display: " + jsonStringObjectsToDisplay);
         
 
-        List<ControlObject> controlObjectsList = controlObjectRepo.findAll();
+        List<ControlObject> controlObjectsList = controlObjectRepo.getOrderedByName();
         String jsonStringObjectsList = "[";
 
         for (ControlObject controlObject : controlObjectsList) {

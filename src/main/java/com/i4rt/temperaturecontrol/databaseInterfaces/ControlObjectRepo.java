@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
 
-    @Query("SELECT o FROM ControlObject o WHERE o.mapX is not NULL and o.mapY is not NULL")
+    @Query(nativeQuery = true,  value = "SELECT * FROM control_object WHERE mapX IS NOT NULL and mapY is not NULL order by name")
     List<ControlObject> getControlObjectsToDisplay();
 
     @Query(nativeQuery = true, value="SELECT object_id FROM control_object order by object_id desc limit 1")
@@ -28,7 +28,7 @@ public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
     @Query(nativeQuery = true, value="SELECT * FROM control_object where thermal_imager_id = :ti_id")
     List<ControlObject> getControlObjectByTIID(@Param("ti_id") Long id);
 
-    @Query(nativeQuery = true, value="SELECT * FROM control_object order by name")
+    @Query(nativeQuery = true, value="SELECT * FROM control_object order by name ")
     List<ControlObject> getOrderedByName();
 
     @Query(nativeQuery = true, value="SELECT * FROM control_object where temperature_class = 'danger'")

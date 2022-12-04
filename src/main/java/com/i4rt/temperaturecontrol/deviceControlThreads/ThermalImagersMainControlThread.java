@@ -103,6 +103,7 @@ public class ThermalImagersMainControlThread extends Thread {
                         if(thermalImagers.get(i).getNeedReboot()){
                             System.out.println("rebooting" + thermalImagers.get(i).getId());
                             thermalImagers.get(i).setNeedReboot(false);
+
                             //thermalImagers.get(i).reboot();
 
                         }

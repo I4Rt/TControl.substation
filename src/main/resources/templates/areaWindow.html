@@ -520,10 +520,8 @@
         <a href="/report">Сформировать отчет</a>
     </div>
     <div class="dropdown directions hidden">
-        <a>Проверить связь</a>
         <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
-        <a id="startScanning">Возобновить сканирование</a>
-        <a id="activateWipers">Инициализировать дворники</a>
+        <a id="reboot">Перезапустить тепловизоры</a>
     </div>
     <div class="dropdown user hidden">
         <div class="myColumn">
@@ -789,7 +787,24 @@
             console.error('Error:', error);
         });
     });
-
+    $("#reboot").click(function (){
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
     function updateAlertsFetch(){
         fetch ("/getAlerts", {
             method: "GET",

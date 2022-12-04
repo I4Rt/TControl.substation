@@ -3,20 +3,15 @@ package com.i4rt.temperaturecontrol.controllers.rest;
 import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
-import com.i4rt.temperaturecontrol.model.Measurement;
-import com.i4rt.temperaturecontrol.model.MeasurementData;
+import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.xml.bind.SchemaOutputResolver;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -70,6 +65,21 @@ public class MainRestController {
             return "Возникла ошибка";
         }
         return "Подключения обновлены";
+    }
+    @RequestMapping(value = "rebootTI", method = RequestMethod.GET)
+    public String rebootAllTIs(){
+        try {
+            List<ThermalImager> thermalImagers = thermalImagerRepo.findAll();
+            for(ThermalImager ti : thermalImagers){
+                ti.reboot();
+                thermalImagerRepo.save(ti);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Возникла ошибка";
+        }
+        return "Тепловизоры перезапущены";
     }
 
     @RequestMapping(value = "getAlerts", method = RequestMethod.GET)

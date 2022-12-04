@@ -96,10 +96,8 @@
     <a href="/report">Сформировать отчет</a>
 </div>
 <div class="dropdown directions hidden">
-    <a>Проверить связь</a>
     <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
-    <a id="startScanning">Возобновить сканирование</a>
-    <a id="activateWipers">Инициализировать дворники</a>
+    <a id="reboot">Перезапустить тепловизоры</a>
 </div>
 <div class="dropdown user hidden">
     <div class="myColumn">
@@ -306,6 +304,7 @@
     function getCoordinatesDataById(id){
         if( ! busy){
             busy = true;
+            let previousImage = $(".gotImg").attr("src");
             $(".gotImg").attr("src", "img/loading.gif");
             fetch("/getCoordinatesById?id=" + id, {
                 method: "POST",
@@ -334,8 +333,7 @@
                             alert('Соединение с тепловизором не установлено.')
                         }
                         else if(currentData["tiID"] == "null"){
-                            allowed = false;
-                            $(".gotImg").attr("src", "img/notfound.png");
+                            $(".gotImg").attr("src", previousImage);
                             alert("Координаты данной зоны не назначены");
                         }
                         else{
@@ -730,6 +728,24 @@
 
     $("#refreshConnections").click(function (){
         fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+    $("#reboot").click(function (){
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',

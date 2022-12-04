@@ -1,11 +1,11 @@
 .uploadWindow {
     z-index: 10;
-    background-color: #e0e0e0;
+    background-color: #f6f6f6;
     border-radius: 10px;
     box-shadow: 4px 2px 4px rgba(0,0,0, 0.4);
 
     width: 300px;
-    padding: 20px 10px 10px 15px;
+    padding: 10px 10px 10px 15px;
     position: absolute;
 
     top: 50%;
@@ -17,11 +17,17 @@
     align-self: flex-end;
     justify-self: flex-start;
     cursor:pointer;
+    position: fixed;
+    z-index: 999999999999;
+    font-weight: 600;
 }
 
 .uploadInfo{
     align-self: flex-start;
     justify-self: flex-start;
+    z-index: 999999999999;
+    position: fixed;
+    font-weight: 600;
 }
 
 .maxSize{
@@ -34,4 +40,13 @@
     margin: 0;
 }
 
-
+.topperAdderBar{
+    height: 30px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    border-radius: 10px 10px 0px 0px;
+    width: 100%;
+    background-color: #e0e0e0;
+    z-index: 99999999999;
+}

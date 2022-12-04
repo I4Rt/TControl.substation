@@ -13,7 +13,6 @@ public class ConnectionHolder {
 
     public static void addConnection(CloseableHttpClient httpClient){
         connections.add(httpClient);
-        System.out.println("connections size: " + connections.size());
     }
 
     public static void removeConnection(CloseableHttpClient httpClient) throws IOException {
@@ -38,6 +37,5 @@ public class ConnectionHolder {
             }
         }
         connections = new ArrayList<>();
-        System.out.println("connections size: " + connections.size());
     }
 }

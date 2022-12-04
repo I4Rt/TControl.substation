@@ -49,7 +49,7 @@ public class MainController {
         User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         user.setThermalImagerGrabbed(false);
         userRepo.save(user);
-        List<ControlObject> controlObjects = controlObjectRepo.findAll();
+        List<ControlObject> controlObjects = controlObjectRepo.getOrderedByName();
         List<ControlObject> controlObjectsToDisplay = controlObjectRepo.getControlObjectsToDisplay();
 
         model.addAttribute("controlObjects", controlObjects);
@@ -100,7 +100,7 @@ public class MainController {
         userRepo.save(curUser);
 
 
-        List<ControlObject> controlObjects = controlObjectRepo.findAll();
+        List<ControlObject> controlObjects = controlObjectRepo.getOrderedByName();
         model.addAttribute("controlObjects", controlObjects);
 
         ThermalImager ti = thermalImagerRepo.getById(Long.valueOf(1));

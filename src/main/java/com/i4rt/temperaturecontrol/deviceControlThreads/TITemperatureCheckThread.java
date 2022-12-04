@@ -99,8 +99,6 @@ public class TITemperatureCheckThread extends Thread{
                         System.out.println("User is busy breaking leaf thread");
                         System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
                         break;
-                    } else {
-                        System.out.println("User not busy");
                     }
                     Thread.sleep(1000); // ???
                     System.out.println("Checking " + co.getName());
