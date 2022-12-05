@@ -24,18 +24,15 @@ public class ReportPageRestController {
     @Autowired
     private final MeasurementRepo measurementRepo;
     @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
-    @Autowired
     private final UserRepo userRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
     @Autowired
     private final MIPMeasurementRepo mipMeasurementRepo;
 
-    public ReportPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
+    public ReportPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
@@ -59,8 +56,7 @@ public class ReportPageRestController {
 
 //            System.out.println("\n\n\n" + results.get(1) + "\n\n\n");
 
-            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo,
-                    this.thermalImagerRepo, this.userRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo);
+            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.userRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo);
             name = createExcelReport.createMainSheet(beginningDate, endingDate);
 
             result.put("reportName", "reports/" + name);

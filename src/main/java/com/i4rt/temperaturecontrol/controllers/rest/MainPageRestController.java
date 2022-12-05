@@ -6,8 +6,7 @@ import com.i4rt.temperaturecontrol.deviceControlThreads.MIPSaver;
 import com.i4rt.temperaturecontrol.deviceControlThreads.ThermalImagersMainControlThread;
 import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThread;
 import com.i4rt.temperaturecontrol.model.ControlObject;
-import com.i4rt.temperaturecontrol.tasks.DeleteCreateFolderTask;
-//import com.i4rt.temperaturecontrol.tasks.Executor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +20,7 @@ public class MainPageRestController {
     private ControlObjectRepo controlObjectRepo;
     @Autowired
     private final MeasurementRepo measurementRepo;
-    @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
+
     @Autowired
     private final UserRepo userRepo;
     @Autowired
@@ -30,18 +28,17 @@ public class MainPageRestController {
     @Autowired
     private final MIPMeasurementRepo mipMeasurementRepo;
 
-    public MainPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
+    public MainPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
 
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
 
         userRepo.setThermalImagerNotGrabbedForAllUsers();
 
-        ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, thermalImagerRepo, userRepo, weatherMeasurementRepo);
+        ThermalImagersMainControlThread.setInstance(controlObjectRepo, measurementRepo, userRepo, weatherMeasurementRepo);
 
         ThermalImagersMainControlThread thermalImagersMainControlThread = ThermalImagersMainControlThread.getInstance();
 

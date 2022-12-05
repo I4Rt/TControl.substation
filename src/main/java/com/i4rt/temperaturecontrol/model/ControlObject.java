@@ -35,9 +35,9 @@ public class ControlObject implements Comparable<ControlObject>{
     @Column
     private String temperatureClass;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "thermal_imager_id", nullable=true)
-    private ThermalImager thermalImager;
+
+    @Column(name = "thermal_imager_id", nullable=true)
+    private Long thermalImager;
 
     // ImageViewer
 
@@ -76,7 +76,7 @@ public class ControlObject implements Comparable<ControlObject>{
         if(curTemp > dangerTemp) {
             temperatureClass = "danger";
         }
-        else if(Math.abs(curTemp - curWeatherTemp) > warningTemp){
+        else if(curWeatherTemp != null && curTemp - curWeatherTemp > warningTemp ){
             temperatureClass = "dangerDifference";
         }
         else{

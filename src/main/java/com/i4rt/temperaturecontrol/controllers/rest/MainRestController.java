@@ -2,6 +2,7 @@ package com.i4rt.temperaturecontrol.controllers.rest;
 
 import com.i4rt.temperaturecontrol.Services.AlertHolder;
 import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
+import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
@@ -20,19 +21,18 @@ public class MainRestController {
     private ControlObjectRepo controlObjectRepo;
     @Autowired
     private final MeasurementRepo measurementRepo;
-    @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
+
     @Autowired
     private final UserRepo userRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
 
-    public MainRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
+    public MainRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
+
     }
 
     @RequestMapping(value = "getWeather", method = RequestMethod.POST)
@@ -58,28 +58,27 @@ public class MainRestController {
 
     @RequestMapping(value = "resetConnections", method = RequestMethod.GET)
     public String resetConnections(){
-        try {
-            ConnectionHolder.removeAllConnection();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Возникла ошибка";
-        }
+        ConnectionHolder.removeAllConnection();
         return "Подключения обновлены";
     }
     @RequestMapping(value = "rebootTI", method = RequestMethod.GET)
     public String rebootAllTIs(){
+        StringBuilder sb = new StringBuilder();
         try {
-            List<ThermalImager> thermalImagers = thermalImagerRepo.findAll();
+            List<ThermalImager> thermalImagers = ThermalImagersHolder.findAll();
             for(ThermalImager ti : thermalImagers){
-                ti.reboot();
-                thermalImagerRepo.save(ti);
+                sb.append("Тепловизор ");
+                sb.append(ti.getId());
+                sb.append(": ");
+                sb.append(ti.reboot());
+                sb.append("\n");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             return "Возникла ошибка";
         }
-        return "Тепловизоры перезапущены";
+        return sb.toString();
     }
 
     @RequestMapping(value = "getAlerts", method = RequestMethod.GET)

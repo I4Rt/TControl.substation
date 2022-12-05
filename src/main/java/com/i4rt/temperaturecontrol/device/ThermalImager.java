@@ -54,8 +54,7 @@ public class ThermalImager {
 
 
 
-    @OneToMany(mappedBy = "thermalImager", fetch = FetchType.EAGER)
-    private List<ControlObject> controlObjectsArray;
+
 
 
 
@@ -69,7 +68,7 @@ public class ThermalImager {
         Random random = new Random();
         random.setSeed(System.currentTimeMillis());
 
-        return random.nextDouble() % 10 * 10 + 30.0;
+        return random.nextDouble() % 10 * 10 + 60.0;
     }
 
     public Double getCurHorizontal(){
@@ -121,7 +120,7 @@ public class ThermalImager {
                 System.out.println("tryCounter: " + tryCounter);
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
-
+                    Thread.sleep(1000);
                     Integer focusingCounter = 0;
                     while(true){
                         focusingCounter += 1;
@@ -148,12 +147,12 @@ public class ThermalImager {
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30)){
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60)){
                             Thread.sleep(200);
 
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60);
                         }
                         else{
                             System.out.println("focused");
@@ -178,6 +177,7 @@ public class ThermalImager {
             }
 
         } catch (Exception e) {
+
             e.printStackTrace();
             return false;
         }
@@ -225,7 +225,7 @@ public class ThermalImager {
                 System.out.println("tryCounter: " + tryCounter);
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
-
+                    Thread.sleep(1000);
                     Integer focusingCounter = 0;
                     while(true){
                         focusingCounter += 1;
@@ -254,10 +254,10 @@ public class ThermalImager {
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30)){
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60)){
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 30 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 30);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60);
                         }
                         else{
                             System.out.println("focused");
@@ -496,6 +496,7 @@ public class ThermalImager {
 
     public String reboot(){
         try {
+            Integer count = 0;
             this.needReboot = false;
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
             System.out.println(httpSenderService.sendPutRequest("/ISAPI/System/reboot", ""));
@@ -503,6 +504,10 @@ public class ThermalImager {
 
             while(! status().equals("ok")){
                 Thread.sleep(1000);
+                count += 1;
+                if(count > 1000){
+                    return "conError";
+                }
             }
         }
         catch (Exception e) {
@@ -515,7 +520,11 @@ public class ThermalImager {
     public String status(){
         try {
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(IP, port, realm, nonce);
-            System.out.println("status: "  + httpSenderService.sendGetRequest("/ISAPI/System/status"));
+            String status = httpSenderService.sendGetRequest("/ISAPI/System/status");
+            System.out.println("status: "  + status);
+            if(status.equals("conError")){
+                return status;
+            }
         }
         catch (Exception e) {
             System.out.println("Status error: " + e);

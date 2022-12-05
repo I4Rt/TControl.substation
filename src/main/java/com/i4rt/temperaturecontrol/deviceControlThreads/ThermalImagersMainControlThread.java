@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.User;
@@ -26,7 +27,7 @@ public class ThermalImagersMainControlThread extends Thread {
     private MeasurementRepo measurementRepo;
     private WeatherMeasurementRepo weatherMeasurementRepo;
 
-    private ThermalImagerRepo thermalImagerRepo;
+
 
     private UserRepo userRepo;
 
@@ -35,22 +36,20 @@ public class ThermalImagersMainControlThread extends Thread {
 
 
 
-    public ThermalImagersMainControlThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, WeatherMeasurementRepo weatherMeasurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public ThermalImagersMainControlThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, WeatherMeasurementRepo weatherMeasurementRepo,  UserRepo userRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
     }
 
-    public static void setInstance(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo){
+    public static void setInstance(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,  UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo){
 
         if(instance == null){
             instance = new ThermalImagersMainControlThread();
         }
         instance.setControlObjectRepo(controlObjectRepo);
         instance.setMeasurementRepo(measurementRepo);
-        instance.setThermalImagerRepo(thermalImagerRepo);
         instance.weatherMeasurementRepo = weatherMeasurementRepo;
         instance.setUserRepo(userRepo);
     }
@@ -69,10 +68,9 @@ public class ThermalImagersMainControlThread extends Thread {
         curChildThreadsCount = new HashMap<>();
 
 
-        for(ThermalImager ti : thermalImagerRepo.findAll()){
+        for(ThermalImager ti : ThermalImagersHolder.findAll()){
             ti.setIsBusy(false);
             ti.setNeedReboot(true);
-            thermalImagerRepo.save(ti);
 
             curChildThreadsCount.put(ti.getId(), 0);
         }
@@ -94,7 +92,7 @@ public class ThermalImagersMainControlThread extends Thread {
                 Thread.sleep(500);
                 continue;
             } else {
-                List<ThermalImager> thermalImagers = thermalImagerRepo.findAll();
+                List<ThermalImager> thermalImagers = ThermalImagersHolder.findAll();
 
                 for(Integer i = 0; i < thermalImagers.size(); i++){
                     //проверка на занятость
@@ -110,7 +108,7 @@ public class ThermalImagersMainControlThread extends Thread {
                         else{
                             System.out.println("Starting thermal imager thread");
                             System.out.println("parent thread cur: " + thermalImagers.get(i).getId());
-                            TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, thermalImagerRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
+                            TITemperatureCheckThread tiTemperatureCheckThread= new TITemperatureCheckThread(this.controlObjectRepo, measurementRepo, weatherMeasurementRepo, userRepo, thermalImagers.get(i).getId());
 
                             tiTemperatureCheckThread.start();
 
@@ -122,7 +120,6 @@ public class ThermalImagersMainControlThread extends Thread {
                                 curChildThreadsCount.put(thermalImagers.get(i).getId(), 0);
                             }
                         }
-                        thermalImagerRepo.save(thermalImagers.get(i));
                     }
                     else{
                         Thread.sleep(500);
@@ -130,5 +127,7 @@ public class ThermalImagersMainControlThread extends Thread {
                 }
             }
         }
+
+
     }
 }

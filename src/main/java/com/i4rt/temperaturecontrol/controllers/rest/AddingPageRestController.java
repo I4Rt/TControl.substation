@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
 import com.i4rt.temperaturecontrol.basic.HttpSenderService;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
@@ -31,10 +32,10 @@ public class AddingPageRestController {
     private ControlObjectRepo controlObjectRepo;
     @Autowired
     private final MeasurementRepo measurementRepo;
-    @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
+
     @Autowired
     private final UserRepo userRepo;
+
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
 
@@ -45,10 +46,9 @@ public class AddingPageRestController {
 
 
 
-    public AddingPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
+    public AddingPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
     }
@@ -63,11 +63,12 @@ public class AddingPageRestController {
 
         ControlObject controlObject = controlObjectRepo.getById(id);
         Map<String, Object> data = new HashMap<>();
-        ThermalImager ti = controlObject.getThermalImager();
 
 
 
-        if(ti != null) {
+
+        if(controlObject.getThermalImager() != null){
+            ThermalImager ti = ThermalImagersHolder.getTIByID(controlObject.getThermalImager());
 //            Integer i = 0;
 //            while(ti.getIsBusy()){
 //                try{
@@ -87,7 +88,7 @@ public class AddingPageRestController {
 //
 
             data.put("id", id);
-            data.put("tiID", controlObject.getThermalImager().getId());
+            data.put("tiID", ThermalImagersHolder.getTIByID(controlObject.getThermalImager()).getId());
             data.put("vertical", controlObject.getVertical());
             data.put("horizontal", controlObject.getHorizontal());
 
@@ -133,7 +134,7 @@ public class AddingPageRestController {
 
         ControlObject controlObject = controlObjectRepo.getById(searchControlObjectId);
 
-        controlObject.setThermalImager(thermalImagerRepo.getById(tiID));
+        controlObject.setThermalImager(tiID);
         controlObject.setVertical(vertical);
         controlObject.setHorizontal(horizontal);
         controlObject.setFocusing(focusing);
@@ -162,7 +163,7 @@ public class AddingPageRestController {
         Double vertical = gotData.getDouble("vertical");
         Double horizontal = gotData.getDouble("horizontal");
         Double focusing = gotData.getDouble("focusing");
-        ThermalImager ti = thermalImagerRepo.getById(tiID);
+        ThermalImager ti = ThermalImagersHolder.getTIByID(tiID);
 //        Integer i = 0;
 //        while(ti.getIsBusy()){
 //            try{
@@ -263,7 +264,7 @@ public class AddingPageRestController {
         Map<String, Object> result = new HashMap<>();
         try {
 
-        ThermalImager ti = thermalImagerRepo.getById(id);
+        ThermalImager ti = ThermalImagersHolder.getTIByID(id);
         Integer focus = ti.setAutoFocus();
         if(focus != -1){
             result.put("focus", focus);
@@ -290,6 +291,13 @@ public class AddingPageRestController {
         }
 
 
+    }
+
+    @RequestMapping(value = "setNotBusy", method = RequestMethod.POST)
+    void finishAdding(){
+        User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
+        curUser.setThermalImagerGrabbed(false);
+        userRepo.save(curUser);
     }
 
 

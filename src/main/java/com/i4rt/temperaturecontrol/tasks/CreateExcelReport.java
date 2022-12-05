@@ -24,19 +24,16 @@ public class CreateExcelReport {
     @Autowired
     private final MeasurementRepo measurementRepo;
     @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
-    @Autowired
     private final UserRepo userRepo;
     @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
     @Autowired
     private final MIPMeasurementRepo mipMeasurementRepo;
 
-    public CreateExcelReport(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo,
+    public CreateExcelReport(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,
                       UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo){
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;

@@ -70,7 +70,7 @@ public class DefaultTemperatureCheck extends Thread{
                 //проверка на занятость
 
 
-                List<ControlObject> curControlObjects = thermalImagers.get(i).getControlObjectsArray();
+                List<ControlObject> curControlObjects = controlObjectRepo.selectByThermalImagerID(thermalImagers.get(i).getId());
 
                 for (ControlObject co : curControlObjects){
                     System.out.println("Мониторю " + co.getName());

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/adderInfoStyle.css">
 
     <link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <script src="js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+
 </head>
 
 <body>
@@ -192,6 +192,14 @@
     let waiting = false;
     let last_command = 0;
 
+    let needChangeTab = true;
+
+    let curActionsCounter = 1;
+    let prevActionsCounter = 0;
+
+
+
+
     function wait_command(command){
         waiting = true;
         console.log("command " + command)
@@ -242,6 +250,7 @@
 
     $(".chooseAble>.areaInfo").each(function (){
         $(this).click(function (){
+            curActionsCounter += 1
             if(! busy){
                 $('.sector').remove();
                 currentChanging = $(this).attr('id');
@@ -337,7 +346,12 @@
                             alert("Координаты данной зоны не назначены");
                         }
                         else{
-
+                            $('.nav-tabs>.nav-item>.nav-link').each(
+                                function () {
+                                    $(this).removeClass('active');
+                                }
+                            )
+                            $('#'.concat(currentData["tiID"])).addClass('active');
                             if(currentData["focusing"] != null){
                                 $("#focusing").val(currentData["focusing"]);
                             }
@@ -372,35 +386,42 @@
     }
 
     $(".main").click(function (){
+        curActionsCounter += 1;
         $(".system").addClass("hidden");
         $(".directions").addClass("hidden");
         $(".user").addClass("hidden");
     });
 
     $("#sysActions").click(function (){
+        curActionsCounter += 1;
         $(".directions").addClass("hidden");
         $(".user").addClass("hidden");
         $(".system").toggleClass("hidden");
     });
     $(".system").click(function (){
+        curActionsCounter += 1;
         $(".system").toggleClass("hidden");
     });
 
     $("#directActions").click(function (){
+        curActionsCounter += 1;
         $(".system").addClass("hidden");
         $(".user").addClass("hidden");
         $(".directions").toggleClass("hidden");
     });
     $(".directions").click(function (){
+        curActionsCounter += 1;
         $(".directions").toggleClass("hidden");
     });
 
     $("#userActions").click(function (){
+        curActionsCounter += 1;
         $(".system").addClass("hidden");
         $(".directions").addClass("hidden");
         $(".user").toggleClass("hidden");
     });
     $(".user").click(function (){
+        curActionsCounter += 1;
         $(".user").toggleClass("hidden");
     });
 
@@ -421,6 +442,7 @@
     let firstCoordinate = null
 
     $(document).click(function (e){
+        curActionsCounter += 1;
         console.log("document click");
         let coordinateX = e.pageX - offset.left;
         let coordinateY = e.pageY - offset.top;
@@ -498,6 +520,7 @@
 
 
     $("#newArea").click(function (){
+        curActionsCounter += 1;
         ready1 = 3;
         console.log("Ready to add")
     });
@@ -593,9 +616,10 @@
         });
     });
 
-    $('.nav-tabs>.nav-item').each(
+    $('.nav-tabs>.nav-item>.nav-link').each(
         function () {
             $(this).click(function (){
+                curActionsCounter += 1;
                 if(! busy){
                     $(".gotImg").attr("src", "img/loading.gif")
                     $(".sector").remove();
@@ -605,13 +629,16 @@
                     moveAndView();
                 }
                 else{
+                    needChangeTab = false;
                     alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+
                 }
             })
         })
 
 
     $('.up').click(function (){
+        curActionsCounter += 1;
         last_command += 1;
         console.log("up");
 
@@ -624,6 +651,7 @@
 
     })
     $('.down').click(function (){
+        curActionsCounter += 1;
         last_command += 1;
         console.log("down");
         $("#vertical").val(parseFloat($("#vertical").val()) - parseFloat($("#step").val()));
@@ -633,6 +661,7 @@
         }
     })
     $('.left').click(function (){
+        curActionsCounter += 1;
         last_command += 1;
         console.log("left");
 
@@ -651,6 +680,7 @@
         }
     })
     $('.right').click(function (){
+        curActionsCounter += 1;
         last_command += 1;
         console.log("right");
 
@@ -670,6 +700,7 @@
     });
 
     $('#logout').click(function (){
+        curActionsCounter += 1;
         fetch("/setTINotInUse", {
             method: "POST",
             headers: {
@@ -681,6 +712,7 @@
 
 
     $("#autoFocusing").click(function (){
+        curActionsCounter += 1;
         if(!busy){
             busy = true;
             $(".gotImg").attr("src", "img/loading.gif");
@@ -727,6 +759,7 @@
     })
 
     $("#refreshConnections").click(function (){
+        curActionsCounter += 1;
         fetch ("/resetConnections", {
             method: "GET",
             headers: {
@@ -744,6 +777,7 @@
             });
     });
     $("#reboot").click(function (){
+        curActionsCounter += 1;
         alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
         fetch ("/rebootTI", {
             method: "GET",
@@ -886,6 +920,7 @@
     }
     $(".messageCross").each(function (){
         $(this).click(function (){
+            curActionsCounter += 1;
             $(this).parent().addClass("hidden");
         });
     });
@@ -896,6 +931,50 @@
     })
 
 
+    $('.nav-tabs>.nav-item>.nav-link').each(
+        function () {
+            $(this).click(function (){
+                curActionsCounter += 1;
+                console.log("need change: " + needChangeTab)
+                if(needChangeTab){
+                    $('.nav-tabs>.nav-item>.nav-link').each(
+                        function () {
+                            $(this).removeClass('active');
+                        }
+                    )
+                    $(this).addClass('active')
+                }
+                else{
+                    needChangeTab = true;
+                }
 
+            });
+        }
+    )
+
+    function setUserNotGrabbedTI(){
+        fetch("/setNotBusy", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+    }
+
+    window.onunload = function (){
+        setUserNotGrabbedTI();
+    }
+
+    setInterval(function(){
+        if(curActionsCounter == prevActionsCounter){
+            setUserNotGrabbedTI();
+            window.location.replace("/notActive");
+        }
+        else{
+            prevActionsCounter = curActionsCounter;
+        }
+
+    }, 1200000);//300000 - 5 мин
 </script>
 </html>

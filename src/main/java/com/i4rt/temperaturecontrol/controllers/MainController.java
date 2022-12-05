@@ -1,9 +1,9 @@
 package com.i4rt.temperaturecontrol.controllers;
 
+import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.additional.UploadedImageCounter;
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.MeasurementRepo;
-import com.i4rt.temperaturecontrol.databaseInterfaces.ThermalImagerRepo;
 import com.i4rt.temperaturecontrol.databaseInterfaces.UserRepo;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
@@ -26,16 +26,13 @@ public class MainController {
     @Autowired
     private final MeasurementRepo measurementRepo;
     @Autowired
-    private final ThermalImagerRepo thermalImagerRepo;
-    @Autowired
     private final UserRepo userRepo;
 
 
-    public MainController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public MainController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,  UserRepo userRepo) {
 
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
     }
 
@@ -86,6 +83,10 @@ public class MainController {
         userRepo.setThermalImagerNotGrabbedForAllUsers();
         return "redirect:/adding";
     }
+    @GetMapping("/notActive")
+    public String getNotActive(){
+        return "/notActive";
+    }
 
 
     @GetMapping("adding")
@@ -103,7 +104,7 @@ public class MainController {
         List<ControlObject> controlObjects = controlObjectRepo.getOrderedByName();
         model.addAttribute("controlObjects", controlObjects);
 
-        ThermalImager ti = thermalImagerRepo.getById(Long.valueOf(1));
+        ThermalImager ti = ThermalImagersHolder.getTIByID(Long.valueOf(1));
 
         model.addAttribute("horizontal", ti.getCurHorizontal());
         model.addAttribute("vertical", ti.getCurVertical());

@@ -1,24 +1,25 @@
 package com.i4rt.temperaturecontrol.tasks;
 
+import com.i4rt.temperaturecontrol.Services.ConnectionHolder;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 
 @Configuration
 @EnableScheduling
-public class DeleteCreateFolderTask{
+public class DailyTask {
     @Scheduled(cron = "0 0 3 * * ?")
-    public void deleteCreateFolder () {
+    public void run() {
         System.out.println("running daily");
+
+        ConnectionHolder.removeAllConnection();
 
         Calendar calendar = Calendar.getInstance();
 
@@ -40,6 +41,8 @@ public class DeleteCreateFolderTask{
                 nowDate = calendar.getTime();
 
                 System.out.println(docDate + " , " + nowDate);
+
+                // add deleting measurements with date earlier than two years ago
 
                 if (docDate.before(nowDate)) {
                     FileUtils.deleteDirectory(folder);

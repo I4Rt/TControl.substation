@@ -134,6 +134,7 @@ public class HttpSenderService {
         }
         catch (Exception e){
             System.out.println("http:GET Request Error: " + e);
+            result = "conError";
         }
         finally {
             ConnectionHolder.removeConnection(httpClient);

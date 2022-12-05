@@ -35,7 +35,7 @@ public class WeatherStationControlThread extends Thread{
 
         while(true){
 
-            Thread.sleep(5000);
+            Thread.sleep(20000);
             try{
                 WeatherStation weatherStation = WeatherStation.getInstance();
                 weatherStation.makeMeasurements();

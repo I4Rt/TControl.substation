@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -35,4 +36,7 @@ public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
     List<ControlObject> getDanger();
     @Query(nativeQuery = true, value="SELECT * FROM control_object where temperature_class = 'dangerDifference'")
     List<ControlObject> getDangerDifference();
+
+    @Query(nativeQuery = true, value = "select * from control_object where thermal_imager_id = :id")
+    ArrayList<ControlObject> selectByThermalImagerID(@Param("id") Long id);
 }

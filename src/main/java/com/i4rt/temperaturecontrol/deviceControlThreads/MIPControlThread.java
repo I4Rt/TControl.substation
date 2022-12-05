@@ -51,7 +51,7 @@ public class MIPControlThread extends Thread{
                     String resultString = in.readLine();
                     if(resultString != null){
                         if(resultString.length() > 20){
-                            resultString.replace("data: ", "");
+                            System.out.println(resultString);
                             String[] dataArray = resultString.split(",");
                             try{
                                 MIPMeasurement mipMeasurement = new MIPMeasurement();
@@ -62,8 +62,8 @@ public class MIPControlThread extends Thread{
                                 mipMeasurement.setVoltageB(Double.parseDouble(dataArray[35]));
                                 mipMeasurement.setVoltageC(Double.parseDouble(dataArray[36]));
                                 mipMeasurement.setPowerA(Double.parseDouble(dataArray[45]));
-                                mipMeasurement.setPowerA(Double.parseDouble(dataArray[46]));
-                                mipMeasurement.setPowerA(Double.parseDouble(dataArray[47]));
+                                mipMeasurement.setPowerB(Double.parseDouble(dataArray[46]));
+                                mipMeasurement.setPowerC(Double.parseDouble(dataArray[47]));
                                 mipMeasurement.setDatetime(Calendar.getInstance().getTime());
                                 lastMeasurement = mipMeasurement;
                             }catch (Exception e){

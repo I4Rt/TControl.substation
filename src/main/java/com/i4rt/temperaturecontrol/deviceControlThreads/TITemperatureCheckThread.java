@@ -1,6 +1,7 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
 import com.i4rt.temperaturecontrol.Services.AlertHolder;
+import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
@@ -22,7 +23,7 @@ public class TITemperatureCheckThread extends Thread{
 
     private MeasurementRepo measurementRepo;
 
-    private ThermalImagerRepo thermalImagerRepo;
+
     private WeatherMeasurementRepo weatherMeasurementRepo;
     private UserRepo userRepo;
     
@@ -32,10 +33,9 @@ public class TITemperatureCheckThread extends Thread{
 
 
 
-    public TITemperatureCheckThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, WeatherMeasurementRepo weatherMeasurementRepo, UserRepo userRepo, Long thermalImagerID) {
+    public TITemperatureCheckThread(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, WeatherMeasurementRepo weatherMeasurementRepo, UserRepo userRepo, Long thermalImagerID) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.thermalImagerRepo = thermalImagerRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.userRepo = userRepo;
         this.thermalImagerID = thermalImagerID;
@@ -49,7 +49,7 @@ public class TITemperatureCheckThread extends Thread{
     @SneakyThrows
     public void run(){
         AlertHolder alertHolder = AlertHolder.getInstance();
-        ThermalImager thermalImager = thermalImagerRepo.getById(thermalImagerID);
+        ThermalImager thermalImager = ThermalImagersHolder.getTIByID(thermalImagerID);
         System.out.println("cur: " + thermalImagerID);
         try {
             System.out.println("Begin leaf thread");
@@ -92,8 +92,6 @@ public class TITemperatureCheckThread extends Thread{
 
 
                 for (ControlObject co : curControlObjects) {
-
-
                     user = userRepo.getUserThatGrabbedThermalImager();
                     if (user != null) {
                         System.out.println("User is busy breaking leaf thread");
@@ -124,7 +122,13 @@ public class TITemperatureCheckThread extends Thread{
                                         Measurement newData = new Measurement();
 
                                         newData.setTemperature(curTemperature);
-                                        newData.setWeatherTemperatureDifference(Math.abs(curTemperature - weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature())); // !
+                                        if(weatherMeasurementRepo.getLastWeatherMeasurement() != null){
+                                            newData.setWeatherTemperatureDifference(Math.abs(curTemperature - weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature())); // !
+                                        }
+                                        else{
+                                            newData.setWeatherTemperatureDifference(Double.valueOf(0)); // !
+                                        }
+
 
                                         newData.setDatetime(Calendar.getInstance().getTime());
 
@@ -135,7 +139,7 @@ public class TITemperatureCheckThread extends Thread{
                                         ControlObject coToSave = controlObjectRepo.getById(co.getId());
 
 
-                                        coToSave.updateTemperatureClass(curTemperature, weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature());
+                                        coToSave.updateTemperatureClass(curTemperature,weatherMeasurementRepo.getLastWeatherMeasurement() != null ? weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature() : null);
 
                                         coToSave.addMeasurement(newData);
                                         newData.setControlObject(coToSave);
@@ -153,12 +157,57 @@ public class TITemperatureCheckThread extends Thread{
 
                                         System.out.println("Data got");
 
+                                        switch (thermalImager.getId().toString()){
+                                            case "1":
+                                                alertHolder.setFirstTIError(false);
+                                                break;
+                                            case "2":
+                                                alertHolder.setSecondTIError(false);
+                                                break;
+                                            case "3":
+                                                alertHolder.setThirdTIError(false);
+                                                break;
+                                            case "4":
+                                                alertHolder.setFourthTIError(false);
+                                                break;
+                                        }
+                                        System.out.println(alertHolder);
+
                                     } else {
                                         System.out.println("Getting temperature error");
+                                        switch (thermalImagerID.toString()){
+                                            case "1":
+                                                alertHolder.setFirstTIError(true);
+                                                break;
+                                            case "2":
+                                                alertHolder.setSecondTIError(true);
+                                                break;
+                                            case "3":
+                                                alertHolder.setThirdTIError(true);
+                                                break;
+                                            case "4":
+                                                alertHolder.setFourthTIError(true);
+                                                break;
+                                        }
+
                                     }
 
                                 } else {
                                     System.out.println("Configuring area error");
+                                    switch (thermalImagerID.toString()){
+                                        case "1":
+                                            alertHolder.setFirstTIError(true);
+                                            break;
+                                        case "2":
+                                            alertHolder.setSecondTIError(true);
+                                            break;
+                                        case "3":
+                                            alertHolder.setThirdTIError(true);
+                                            break;
+                                        case "4":
+                                            alertHolder.setFourthTIError(true);
+                                            break;
+                                    }
                                 }
                             } else {
                                 System.out.println("passing");
@@ -172,26 +221,12 @@ public class TITemperatureCheckThread extends Thread{
                 System.out.println("Passing: Thermal imager with current id is not exist");
             }
             thermalImager.setIsBusy(false);
-            thermalImagerRepo.save(thermalImager);
-            switch (thermalImager.getId().toString()){
-                case "1":
-                    alertHolder.setFirstTIError(false);
-                    break;
-                case "2":
-                    alertHolder.setSecondTIError(false);
-                    break;
-                case "3":
-                    alertHolder.setThirdTIError(false);
-                    break;
-                case "4":
-                    alertHolder.setFourthTIError(false);
-                    break;
-            }
-            System.out.println(alertHolder);
+
+
         }
         catch (Exception e){
             thermalImager.setIsBusy(false);
-            thermalImagerRepo.save(thermalImager);
+
             e.printStackTrace();
             switch (thermalImagerID.toString()){
                 case "1":
@@ -208,8 +243,9 @@ public class TITemperatureCheckThread extends Thread{
                     break;
             }
             System.out.println(alertHolder);
-            thermalImager.setIsBusy(false);
-            thermalImagerRepo.save(thermalImager);
+
+
         }
+        Thread.sleep(1000);
     }
 }

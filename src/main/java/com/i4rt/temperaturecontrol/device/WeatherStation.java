@@ -49,19 +49,18 @@ public class WeatherStation {
         Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
         try {
             String[] dev_list = SerialPortList.getPortNames();
-            for(String s : dev_list){
-                System.out.println(s);
-            }
+
             if (dev_list.length > 0) {
 
 
                 // Выбираем порт
-                sp.setDevice("COM8");
-                sp.setParity(SerialPort.Parity.NONE);
-                sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
-                sp.setDataBits(8);
+                sp.setDevice("COM2");
 
+                sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
+                sp.setParity(SerialPort.Parity.NONE);
+                sp.setDataBits(8);
                 sp.setStopBits(1);
+
                 System.out.println("before modbus");
                 ModbusMaster m = ModbusMasterFactory.createModbusMasterRTU(sp);
                 m.connect();
@@ -70,17 +69,16 @@ public class WeatherStation {
                 // Адрес метеостанции
                 int slaveId = 0x33;
 
-                // Опрашиваемый регистр, 6 - температура
-                int offset = 6;
+
                 int quantity = 1;
 
-                    this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
-                    this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
-                    this.humidity = getValues(m, slaveId, 7, quantity)/10.0;
-                    this.atmospherePressure = getValues(m, slaveId, 8, quantity)/10.0;
-                    this.rainfall = getValues(m, slaveId, 9, quantity)/10.0;
+                this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
+                this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
+                this.humidity = getValues(m, slaveId, 7, quantity)/10.0;
+                this.atmospherePressure = getValues(m, slaveId, 8, quantity)/10.0;
+                this.rainfall = getValues(m, slaveId, 9, quantity)/10.0;
 
-                    System.out.println(this.toString());
+                System.out.println(this.toString());
 
                 this.temperature = getValues(m, slaveId, 6, quantity)/10.0;
                 this.windForce = getValues(m, slaveId, 5, quantity)/10.0;
@@ -98,7 +96,7 @@ public class WeatherStation {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Weather station exception: " + e);
         }
 
     }
@@ -107,10 +105,8 @@ public class WeatherStation {
     protected static int getValues(ModbusMaster m, int slaveId, int offset, int quantity){
         int value = 0;
         try {
-            System.out.println("before reading");
             System.out.println(m.isConnected());
             int[] registerValues = m.readHoldingRegisters(slaveId, offset, quantity);
-            System.out.println("check");
             value = registerValues[0];
             System.out.println("Address: " + offset + ", Value: " + value);
         } catch (RuntimeException e) {

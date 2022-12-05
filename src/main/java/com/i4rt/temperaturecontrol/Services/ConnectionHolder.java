@@ -27,7 +27,7 @@ public class ConnectionHolder {
         }
     }
 
-    public static void removeAllConnection() throws IOException {
+    public static void removeAllConnection() {
         for (CloseableHttpClient chc : connections){
             try{
                 chc.close();
