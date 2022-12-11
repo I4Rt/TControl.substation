@@ -30,6 +30,10 @@ public interface MeasurementRepo extends JpaRepository<Measurement, Long> {
     ArrayList<Measurement> getOverheatingMeasurement(@Param("searchId") Long searchId, @Param("dangerTemp") Double dangerTemp, @Param("begin") Date begin,
                                                      @Param("end") Date end);
 
+    @Query(nativeQuery = true, value ="SELECT * FROM measurement where control_object_id = :searchId and datetime >= :begin and datetime <= :end and weather_temperature_difference >= :warningTemp order by measurement_id")
+    ArrayList<Measurement> getOverheatingWarningMeasurement(@Param("searchId") Long searchId, @Param("warningTemp") Double warningTemp, @Param("begin") Date begin,
+                                                     @Param("end") Date end);
+
     @Modifying
     @Transactional
     @Query(nativeQuery = true, value="delete FROM measurement where control_object_id = :id")

@@ -56,7 +56,7 @@ public class CreateExcelReport {
         redStyle.setFillForegroundColor(IndexedColors.CORAL.getIndex());
 
         CellStyle dateStyle = book.createCellStyle();
-        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy hh:mm:ss.000"));
+        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy hh:mm:ss"));
 
         // список всех подконтрольных объектов
         List<ControlObject> controlObjects = this.controlObjectRepo.findAll();
@@ -70,20 +70,24 @@ public class CreateExcelReport {
         System.out.println("\nСоздание листа\n");
 
         // вывод всех подконтрольных областей и задание им стиля
+        int numCellColumn;
         for (int i = 0; i < rowSize + 1; i++) {
             Row row = sheet.createRow(i);
             for (int j = i * 5; j < i * 5 + columnSize; j++) {
                 if (j >= controlObjects.size()){
                     break;
                 }
-                Cell cell = row.createCell(j - i * 5);
-
+                numCellColumn = j - i * 5;
+                Cell cell = row.createCell(numCellColumn);
+                sheet.autoSizeColumn(numCellColumn);
                 ControlObject controlObject = controlObjects.get(j);
                 boolean overheating = false;
 
                 //проверка на перегретость
 //                List<Measurement> measurements = controlObject.getMeasurement();
                 if (!measurementRepo.getOverheatingMeasurement(controlObject.getId(),
+                        (Double) controlObject.getDangerTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
+                if (!measurementRepo.getOverheatingWarningMeasurement(controlObject.getId(),
                         (Double) controlObject.getWarningTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
 
                 if (!overheating) cell.setCellStyle(greenStyle);
@@ -109,6 +113,7 @@ public class CreateExcelReport {
             // название области
             Row areaRow = cellSheet.createRow(0);
             Cell areaCell = areaRow.createCell(0);
+
             areaCell.setCellValue("Область " + controlObject.getName());
             areaCell.setCellStyle(redStyle);
 
@@ -142,7 +147,11 @@ public class CreateExcelReport {
             int rowCount = 2;
 
             for (int i = 0; i < totalDates.size(); i++) {
-                if (totalDates.get(i).equals(datePlusMinute) || totalDates.get(i).after(datePlusMinute)){
+                System.out.println("time: " + totalDates.get(i));
+                System.out.println(datePlusMinute);
+                if (!totalDates.get(i).before(datePlusMinute)){
+                    System.out.println("check");
+
                     rowCount++;
                     Double weatherTemp = 0.0;
                     Double temp = 0.0;
@@ -164,13 +173,21 @@ public class CreateExcelReport {
                         }
                         if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement){
                             Double value = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+                            System.out.println(((Measurement) preparedToSendData.get(minuteDates.get(j))).getDatetime());
                             System.out.println("t: " + value);
                             temp += value;
                             thermalCount++;
                             if (value >= maxTemp) maxTemp = value;
                         }
                         if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement){
-                            Double value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerA();
+                            String voltageMeasurementChannel = controlObject.getVoltageMeasurementChannel();
+                            Double value;
+                            if (voltageMeasurementChannel.equals("A"))  value = ((MIPMeasurement)
+                                    preparedToSendData.get(minuteDates.get(j))).getPowerA();
+                            else if (voltageMeasurementChannel.equals("B"))  value = ((MIPMeasurement)
+                                    preparedToSendData.get(minuteDates.get(j))).getPowerB();
+                            else  value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerC();
+
                             System.out.println("m: " + value);
                             mipPower += value;
                             mipCount++;
@@ -200,7 +217,7 @@ public class CreateExcelReport {
                     cal.add(Calendar.MINUTE, 1);
                     datePlusMinute = cal.getTime();
 
-                    minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()-1));
+                    minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()));
                     System.out.println(minuteDates.toString());
                 }
 
@@ -212,9 +229,10 @@ public class CreateExcelReport {
             // информация по перегретым точкам на главном эксель листе
             Row row = sheet.createRow(2 + rowSize + 26 * overheatedAreaList.indexOf(controlObject));
             Cell cell = row.createCell(0);
+//            sheet.autoSizeColumn(0);
             cell.setCellValue("Область " + controlObject.getName());
             cell.setCellStyle(redStyle);
-//            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(0);
 
             // строка с граничными температурами
             Row tempBorders = sheet.createRow(row.getRowNum() + 1);
@@ -248,7 +266,10 @@ public class CreateExcelReport {
             plotArea.getValAxArray()[0].addNewMajorGridlines();
 
             ArrayList<Measurement> overheatingMeasurements = measurementRepo.getOverheatingMeasurement(
+                    controlObject.getId(), (Double) controlObject.getDangerTemp(), beginningDate, endingDate);
+            ArrayList<Measurement> overheatingWarningMeasurements = measurementRepo.getOverheatingWarningMeasurement(
                     controlObject.getId(), (Double) controlObject.getWarningTemp(), beginningDate, endingDate);
+            overheatingMeasurements.addAll(overheatingWarningMeasurements);
             String info = "Время превышения температур: ";
             StringBuilder sb = new StringBuilder(info);
             ArrayList<String> uniqueDates = new ArrayList<>();
