@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.List;
 
@@ -42,6 +43,27 @@ public class TITemperatureCheckThread extends Thread{
 
     }
 
+    private static class AlertSetter{
+        protected static void setAlert(Long id, Boolean value){
+            AlertHolder alertHolder = AlertHolder.getInstance();
+            System.out.println("id:" + id.toString());
+            switch (id.toString()){
+                case "1":
+                    alertHolder.setFirstTIError(value);
+                    break;
+                case "2":
+                    alertHolder.setSecondTIError(value);
+                    break;
+                case "3":
+                    alertHolder.setThirdTIError(value);
+                    break;
+                case "4":
+                    alertHolder.setFourthTIError(value);
+                    break;
+            }
+        }
+    }
+
     
 
 
@@ -60,8 +82,15 @@ public class TITemperatureCheckThread extends Thread{
             if (thermalImager != null) {
                 if(!thermalImager.status().equals("ok")){
                     System.out.println("TI unavailable");
+                    AlertSetter.setAlert(thermalImager.getId(), true);
                     throw new Exception();
                 }
+                else{
+                    System.out.println("Setting false");
+                    AlertSetter.setAlert(thermalImager.getId(), false);
+                }
+
+
                 List<ControlObject> curControlObjects = this.controlObjectRepo.getControlObjectByTIID(thermalImager.getId());
                 System.out.println("Collection size " + curControlObjects.size());
                 Collections.sort(curControlObjects);
@@ -157,57 +186,17 @@ public class TITemperatureCheckThread extends Thread{
 
                                         System.out.println("Data got");
 
-                                        switch (thermalImager.getId().toString()){
-                                            case "1":
-                                                alertHolder.setFirstTIError(false);
-                                                break;
-                                            case "2":
-                                                alertHolder.setSecondTIError(false);
-                                                break;
-                                            case "3":
-                                                alertHolder.setThirdTIError(false);
-                                                break;
-                                            case "4":
-                                                alertHolder.setFourthTIError(false);
-                                                break;
-                                        }
+                                        AlertSetter.setAlert(thermalImager.getId(), false);
                                         System.out.println(alertHolder);
 
                                     } else {
                                         System.out.println("Getting temperature error");
-                                        switch (thermalImagerID.toString()){
-                                            case "1":
-                                                alertHolder.setFirstTIError(true);
-                                                break;
-                                            case "2":
-                                                alertHolder.setSecondTIError(true);
-                                                break;
-                                            case "3":
-                                                alertHolder.setThirdTIError(true);
-                                                break;
-                                            case "4":
-                                                alertHolder.setFourthTIError(true);
-                                                break;
-                                        }
-
+                                        AlertSetter.setAlert(thermalImager.getId(), true);
                                     }
 
                                 } else {
                                     System.out.println("Configuring area error");
-                                    switch (thermalImagerID.toString()){
-                                        case "1":
-                                            alertHolder.setFirstTIError(true);
-                                            break;
-                                        case "2":
-                                            alertHolder.setSecondTIError(true);
-                                            break;
-                                        case "3":
-                                            alertHolder.setThirdTIError(true);
-                                            break;
-                                        case "4":
-                                            alertHolder.setFourthTIError(true);
-                                            break;
-                                    }
+                                    AlertSetter.setAlert(thermalImager.getId(), true);
                                 }
                             } else {
                                 System.out.println("passing");
@@ -226,25 +215,9 @@ public class TITemperatureCheckThread extends Thread{
         }
         catch (Exception e){
             thermalImager.setIsBusy(false);
-
-            e.printStackTrace();
-            switch (thermalImagerID.toString()){
-                case "1":
-                    alertHolder.setFirstTIError(true);
-                    break;
-                case "2":
-                    alertHolder.setSecondTIError(true);
-                    break;
-                case "3":
-                    alertHolder.setThirdTIError(true);
-                    break;
-                case "4":
-                    alertHolder.setFourthTIError(true);
-                    break;
-            }
+            System.out.println("Leaf thread error: " + e);
+            AlertSetter.setAlert(thermalImager.getId(), true);
             System.out.println(alertHolder);
-
-
         }
         Thread.sleep(1000);
     }

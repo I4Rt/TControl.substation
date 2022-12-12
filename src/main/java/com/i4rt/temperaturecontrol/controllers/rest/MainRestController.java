@@ -43,14 +43,14 @@ public class MainRestController {
                     "<text>φ: " + weatherMeasurement.getHumidity() + "%</text>" +
                     "<text>t: " + weatherMeasurement.getTemperature() + "°</text>" +
                     "<text>p: " + weatherMeasurement.getAtmospherePressure() + " Атм</text>" +
-                    "<text>t: " + weatherMeasurement.getRainfall() + " мм</text>";
+                    "<text>h: " + weatherMeasurement.getRainfall() + " мм</text>";
         }
         else{
             return "<text>v: ? м/с</text>" +
                     "<text>φ: ?%</text>" +
                     "<text>t: ?°</text>" +
                     "<text>p: ? Атм</text>" +
-                    "<text>t: ? мм</text>";
+                    "<text>h: ? мм</text>";
         }
 
 

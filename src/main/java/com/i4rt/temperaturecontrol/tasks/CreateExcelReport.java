@@ -84,6 +84,8 @@ public class CreateExcelReport {
                 //проверка на перегретость
 //                List<Measurement> measurements = controlObject.getMeasurement();
                 if (!measurementRepo.getOverheatingMeasurement(controlObject.getId(),
+                        (Double) controlObject.getDangerTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
+                if (!measurementRepo.getOverheatingWarningMeasurement(controlObject.getId(),
                         (Double) controlObject.getWarningTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
 
                 if (!overheating) cell.setCellStyle(greenStyle);

@@ -1,6 +1,7 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
 import com.i4rt.temperaturecontrol.Services.AlertHolder;
+import com.i4rt.temperaturecontrol.Services.SystemParametersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.WeatherStation;
 import com.i4rt.temperaturecontrol.model.WeatherMeasurement;
@@ -37,6 +38,7 @@ public class WeatherStationControlThread extends Thread{
 
             Thread.sleep(20000);
             try{
+                SystemParametersHolder systemParametersHolder = SystemParametersHolder.getInstance();
                 WeatherStation weatherStation = WeatherStation.getInstance();
                 weatherStation.makeMeasurements();
                 if(weatherStation.getTemperature() == 0 && weatherStation.getHumidity() == 0 &&
@@ -55,6 +57,13 @@ public class WeatherStationControlThread extends Thread{
                     weatherMeasurement.setDatetime(Calendar.getInstance().getTime());
 
                     weatherMeasurementRepo.save(weatherMeasurement);
+
+                    if(weatherStation.getTemperature() <= -35.0){
+                        systemParametersHolder.setTooLowTemperatureStopMark(true);
+                    }
+                    else{
+                        systemParametersHolder.setTooLowTemperatureStopMark(false);
+                    }
                 }
                 AlertHolder alertHolder = AlertHolder.getInstance();
                 alertHolder.setWeatherStationError(false);

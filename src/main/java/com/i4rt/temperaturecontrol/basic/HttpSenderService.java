@@ -202,10 +202,10 @@ public class HttpSenderService {
         }
         catch (Exception e){
             System.out.println("http:Get Image error: " + e);
+            return "conError";
         }
         finally {
             ConnectionHolder.removeConnection(httpClient);
-
             return "got_pic"+ GotPicImageCounter.getCurrentCounter() +".jpg";
         }
 

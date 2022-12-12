@@ -1,4 +1,0 @@
-UPDATE public.thermal_imager SET ip = '192.168.127.22', is_busy = false, port = 80, nonce = '5a4456694e32526c4d7a6b36597a51324d324d785a6a453d', realm = 'IP Camera(G7837)', need_reboot = false WHERE thermal_imager_id = 2;
-UPDATE public.thermal_imager SET ip = '192.168.127.21', is_busy = false, port = 80, nonce = '4d6d55334d7a67304e7a706a4e4459775a6a646c4f413d3d', realm = 'IP Camera(J3898)', need_reboot = false WHERE thermal_imager_id = 1;
-UPDATE public.thermal_imager SET ip = '192.168.127.24', is_busy = false, port = 80, nonce = '4e32526c4f5464684f475536597a51794e6a4d315a54593d', realm = 'IP Camera(J3898)', need_reboot = false WHERE thermal_imager_id = 4;
-UPDATE public.thermal_imager SET ip = '192.168.127.23', is_busy = false, port = 80, nonce = '4d5749344e574e6a5a6a6736597a51324d445a6b4e474d3d', realm = 'IP Camera(J1488)', need_reboot = false WHERE thermal_imager_id = 3;

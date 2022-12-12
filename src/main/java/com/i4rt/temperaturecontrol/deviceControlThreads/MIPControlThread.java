@@ -81,12 +81,7 @@ public class MIPControlThread extends Thread{
                 if(in != null){
                     in.close();
                 }
-                File f = new File("error.txt");
-                f.createNewFile();
-                FileWriter writer = new FileWriter(f, true);
-                writer.write(Calendar.getInstance().getTime() + "MIP error: " );
-                writer.write(e.toString());
-                writer.close();
+
 
                 System.out.println("MIP error: " );
                 System.out.println(e.toString());

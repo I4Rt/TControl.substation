@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="css/chooseObjectWindowStyle.css">
     <link rel="stylesheet" href="css/dropdownStyle.css">
 </head>
+<style>
+    *{
+        font-size: 14px;
+    }
+</style>
 <body>
     <div class="topBar">
         <div class="buttonsBar">
@@ -44,7 +49,7 @@
         </div>
 
         <div class="list">
-            <div class="myRow" style=" width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b>Участки наблюдения</b></b></div>
+            <div class="myRow" style="font-size: 18px; width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b style="font-size: 16px">Участки наблюдения</b></b></div>
             <div class="myRow areaList" >
                 <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
                         <text th:utext="${controlObject.name}">Зона 1</text>
@@ -86,7 +91,7 @@
         <div class="uploadInfo">Новая подложка</div>
         <form class="myRow" action="setNewMap" method="POST"  style="margin-top: 30px !important" enctype="multipart/form-data">
             <input type="file" name="image" accept="image/png"/>
-            <input type="submit" name="setNewButton">
+            <input type="submit" name="setNewButton" value="Обновить">
         </form>
         <div class="myRow center">
             <text style="font-size: 10px">

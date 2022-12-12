@@ -137,17 +137,27 @@ public class AddingPageRestController {
         controlObject.setThermalImager(tiID);
         controlObject.setVertical(vertical);
         controlObject.setHorizontal(horizontal);
-        controlObject.setFocusing(focusing);
 
+        focusing = Double.valueOf(Math.round(focusing/100) * 100);
+
+        controlObject.setFocusing(focusing);
         controlObject.setX(x);
         controlObject.setY(y);
         controlObject.setAreaHeight(areaHeight);
         controlObject.setAreaWidth(areaWidth);
 
-        controlObjectRepo.save(controlObject);
+        if(focusing > 599 && focusing < 6001){
+
+            controlObjectRepo.save(controlObject);
 
 
-        return "Координаты объекта контроля изменены";
+            return "Координаты объекта контроля изменены";
+        }
+        else{
+            return "Данные не сохранены.\nДопустимые значение параметра \"focusing\" находятся в диапазоне от 600 до 6000";
+        }
+
+
     }
 
     @RequestMapping(value = "gotoAndGetImage", method = RequestMethod.POST)
@@ -271,9 +281,13 @@ public class AddingPageRestController {
 
             HttpSenderService httpSenderService = HttpSenderService.getHttpSenderService(ti.getIP(), ti.getPort(), ti.getRealm(), ti.getNonce());
 
-            httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
+            if (httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture").equals("conError")){
+                result.put("newUrl", "conError");
+            }
+            else{
+                result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
+            }
 
-            result.put("newUrl", "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg");
         }
         else{
             result.put("focus", 800);

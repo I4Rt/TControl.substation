@@ -68,7 +68,7 @@ public class ThermalImager {
         Random random = new Random();
         random.setSeed(System.currentTimeMillis());
 
-        return random.nextDouble() % 10 * 10 + 60.0;
+        return random.nextDouble() % 10 * 10 + 100.0;
     }
 
     public Double getCurHorizontal(){
@@ -113,14 +113,14 @@ public class ThermalImager {
             while(true){
                 answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
                 System.out.println("counter: " + tryCounter);
-                Thread.sleep(200);
+                Thread.sleep(400);
                 parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
                 System.out.println("tryCounter: " + tryCounter);
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
-                    Thread.sleep(1000);
+                    Thread.sleep(1500);
                     Integer focusingCounter = 0;
                     while(true){
                         focusingCounter += 1;
@@ -141,34 +141,34 @@ public class ThermalImager {
                         System.out.println("focusing");
                         System.out.println(httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
-
+                        Thread.sleep(400);
                         answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
 
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60)){
-                            Thread.sleep(200);
-
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 100 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 100)){
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 100 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 100);
                         }
                         else{
                             System.out.println("focused");
                             break;
                         }
 
-                        if(focusingCounter > 50){
-                            System.out.println("Too many trys");
-                            return false;
+                        if(focusingCounter > 25){
+                            System.out.println("Предупреждение: Не установлена нужная фокусировка.");
+                            System.out.println("Тестовый режим: Возвращаю картинку.");
+                            break;
+                            //return false;
                         }
                     }
 
                     return true;
                 }
 
-                if(tryCounter > 50){
+                if(tryCounter > 25){
                     System.out.println("Too many trys");
                     return false;
                 }
@@ -216,7 +216,7 @@ public class ThermalImager {
             while(true){
                 answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
                 System.out.println("counter: " + tryCounter);
-                Thread.sleep(200);
+                Thread.sleep(400);
                 System.out.println(answer);
                 parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
@@ -225,7 +225,7 @@ public class ThermalImager {
                 System.out.println("tryCounter: " + tryCounter);
 
                 if(Double.parseDouble(parsedAnswer.get("elevation")) == vertical / 10 && Double.parseDouble(parsedAnswer.get("azimuth")) == horizontal / 10){
-                    Thread.sleep(1000);
+                    Thread.sleep(1500);
                     Integer focusingCounter = 0;
                     while(true){
                         focusingCounter += 1;
@@ -247,25 +247,27 @@ public class ThermalImager {
                         System.out.println("focusing");
                         System.out.println("focusing result: " + httpSenderService.sendPutRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx", focusingBody));
 
-                        Thread.sleep(200);
+                        Thread.sleep(400);
 
                         answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
 
                         parsedAnswer = HttpSenderService.getMapFromXMLString(answer);
 
 
-                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60)){
+                        if(!(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 100 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 100)){
                             System.out.println("cur_focus " + Integer.parseInt(parsedAnswer.get("focus")));
                             System.out.println("need focus " + focusing.intValue());
-                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 60 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 60);
+                            System.out.println(Integer.parseInt(parsedAnswer.get("focus")) < focusing.intValue() + 100 && Integer.parseInt(parsedAnswer.get("focus")) > focusing.intValue() - 100);
                         }
                         else{
                             System.out.println("focused");
                             break;
                         }
-                        if(focusingCounter > 30){
-                            System.out.println("Can not focusing for this value");
-                            return false;
+                        if(focusingCounter > 25){
+                            System.out.println("Предупреждение: не установлена нужная фокусировка.");
+                            System.out.println("Тестовый режим: Возвращаю картинку.");
+                            break;
+                            //return false;
                         }
                     }
 
@@ -291,7 +293,7 @@ public class ThermalImager {
                     return true;
                 }
 
-                if(tryCounter > 50){
+                if(tryCounter > 25){
                     return false;
                 }
 
@@ -315,9 +317,15 @@ public class ThermalImager {
             if(gotoResult){
                 // получить новое фото и сохранить его с новым индексом
                 System.out.println("preparing for image getting");
-                httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture");
-                System.out.println("ImageGot");
-                return "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg"; //!
+                if(httpSenderService.getImage(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\img", "/ISAPI/Streaming/channels/2/picture").equals("conError")){
+                    return "conError";
+                }
+                else{
+                    System.out.println("Image got");
+                    return "img/got_pic" + GotPicImageCounter.getCurrentCounter() + ".jpg"; //!
+                }
+
+
             }
             else{
                 return "conError";
@@ -471,7 +479,7 @@ public class ThermalImager {
             httpSenderService.sendPutRequest("/ISAPI/Image/channels/2/focusConfiguration", body1);
             httpSenderService.sendPutRequest("/ISAPI/Image/channels/2/focusConfiguration", body2);
             Thread.sleep(5000);
-            Integer previousFocusing = -29029304;
+            Integer previousFocusing = -29029304; // ???
             while (true){
                 String answer = httpSenderService.sendGetRequest("/ISAPI/PTZCtrl/channels/2/absoluteEx");
                 Thread.sleep(500);
@@ -534,5 +542,9 @@ public class ThermalImager {
     }
 
 
+
+//    public String lensDeicing(){
+//        return "ok";
+//    }
 
 }

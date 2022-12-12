@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.deviceControlThreads;
 
+import com.i4rt.temperaturecontrol.Services.SystemParametersHolder;
 import com.i4rt.temperaturecontrol.Services.ThermalImagersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
@@ -87,8 +88,15 @@ public class ThermalImagersMainControlThread extends Thread {
         while(true) {
 
             user = userRepo.getUserThatGrabbedThermalImager();
+            Double lastTemperature = weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature();
+            SystemParametersHolder systemParametersHolder = SystemParametersHolder.getInstance();
+            if(systemParametersHolder.getTooLowTemperatureStopMark()){
+                System.out.println("ВНИМАНИЕ: Поток сканирования приостановлен по достижении критических температур окружающей среды.");
+                Thread.sleep(20000); // 20 seconds
+                continue;
+            }
             if (user != null) {
-                //System.out.println("\n\n" + user.getThermalImagerGrabbed() + "\n\n");
+
                 Thread.sleep(500);
                 continue;
             } else {

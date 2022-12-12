@@ -13,7 +13,11 @@
     <link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
 
 </head>
-
+<style>
+    *{
+        font-size: 14px;
+    }
+</style>
 <body>
 <div class="topBar">
     <div class="buttonsBar">
@@ -44,7 +48,7 @@
                     <button class="nav-link" id="4" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ТВ4</button>
                 </li>
             </ul>
-            <div class="tab-content" id="myTabContent">
+            <div style="height: 493px" class="tab-content" id="myTabContent">
 
                 <div class="divCenterHolder tab-pane fade show " role="tabpanel" >
                     <div class="gotImage"><img class="gotImg" th:src="${src}"></div>
@@ -76,9 +80,6 @@
 
     <div class="list ">
         <div class="myRow" style=" width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b>Участки наблюдения</b></b></div>
-        <div class="myRow areaInfo newButton">
-            <text>Cоздать новый</text><b>+</b>
-        </div>
         <div class="myRow chooseAble">
             <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:id="${controlObject.id}">
                 <text th:utext="${controlObject.name}"></text>
@@ -334,7 +335,7 @@
                         if(currentData["newUrl"] == "error"){
                             allowed = false;
                             $('.gotImg').attr('src', 'img/disconnect.png')
-                            alert('Соединение с тепловизором не установлено.')
+                            alert('Тепловизору не удалось перейти в назначенные координаты.')
                         }
                         else if (currentData["newUrl"] == 'conError'){
                             allowed = false;
@@ -573,7 +574,7 @@
                         $('.gotImg').attr('src', 'img/disconnect.png')
                         alert('Соединение с тепловизором не установлено.')
                     }
-                    else if(currentData["status"] == 800){
+                    else if(currentData["status"] == 500){
                         allowed = false;
                         $('.gotImg').attr('src', 'img/disconnect.png')
                         alert('Произошла ошибка. Попробуйте снова.')
@@ -735,9 +736,13 @@
 
                         if(currentData['message'])
                             alert(currentData['message'])
-
-                        $(".gotImg").attr("src", currentData["newUrl"]);
-                        $("#focusing").val(currentData["focus"]);
+                        if(currentData["newUrl"] == 'conError'){
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                        }
+                        else{
+                            $(".gotImg").attr("src", currentData["newUrl"]);
+                            $("#focusing").val(currentData["focus"]);
+                        }
 
                         $(".sector").remove();
 

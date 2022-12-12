@@ -54,7 +54,7 @@ public class WeatherStation {
 
 
                 // Выбираем порт
-                sp.setDevice("COM2");
+                sp.setDevice("COM5");
 
                 sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
                 sp.setParity(SerialPort.Parity.NONE);
@@ -102,12 +102,12 @@ public class WeatherStation {
     }
 
 
-    protected static int getValues(ModbusMaster m, int slaveId, int offset, int quantity){
-        int value = 0;
+    protected static short getValues(ModbusMaster m, int slaveId, int offset, int quantity){
+        short value = 0;
         try {
             System.out.println(m.isConnected());
             int[] registerValues = m.readHoldingRegisters(slaveId, offset, quantity);
-            value = registerValues[0];
+            value = (short) registerValues[0];
             System.out.println("Address: " + offset + ", Value: " + value);
         } catch (RuntimeException e) {
             throw e;
