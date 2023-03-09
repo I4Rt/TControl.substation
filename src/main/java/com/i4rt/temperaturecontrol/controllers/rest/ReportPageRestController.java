@@ -50,14 +50,16 @@ public class ReportPageRestController {
         Map<String, String> result = new HashMap<>();
 
         try {
+            int[] areaIdList = new int[]{1, 2, 3, 4, 5, 6};
             Date beginningDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(begin);
             Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
             System.out.println("dates " + beginningDate + " ----> " + endingDate);
 
 //            System.out.println("\n\n\n" + results.get(1) + "\n\n\n");
 
-            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.userRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo);
-            name = createExcelReport.createMainSheet(beginningDate, endingDate);
+            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo,
+                    this.weatherMeasurementRepo, this.mipMeasurementRepo);
+            name = createExcelReport.createMainSheet(beginningDate, endingDate, areaIdList);
 
             result.put("reportName", "reports/" + name);
 

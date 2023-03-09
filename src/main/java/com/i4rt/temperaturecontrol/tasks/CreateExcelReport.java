@@ -10,6 +10,7 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTPlotArea;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -19,27 +20,20 @@ import java.util.*;
 @Component
 public class CreateExcelReport {
 
-    @Autowired
     private final ControlObjectRepo controlObjectRepo;
-    @Autowired
     private final MeasurementRepo measurementRepo;
-    @Autowired
-    private final UserRepo userRepo;
-    @Autowired
     private final WeatherMeasurementRepo weatherMeasurementRepo;
-    @Autowired
     private final MIPMeasurementRepo mipMeasurementRepo;
 
     public CreateExcelReport(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,
-                      UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo){
+                             WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo){
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
-        this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
     }
 
-    public String createMainSheet(Date beginningDate, Date endingDate) throws IOException {
+    public String createMainSheet(Date beginningDate, Date endingDate, int[] areaIdList) throws IOException {
 
         // создание главного эксель листа
         XSSFWorkbook book = new XSSFWorkbook();
@@ -58,14 +52,31 @@ public class CreateExcelReport {
         CellStyle dateStyle = book.createCellStyle();
         dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy hh:mm:ss"));
 
+        ArrayList<ControlObject> controlObjects = new ArrayList<>();
+
+        if (!(areaIdList.length == 0)){
+            for (int id: areaIdList){
+                controlObjects.add(controlObjectRepo.getControlObjectById(id));
+            }
+//            areaInfo(book, sheet, beginningDate, endingDate, greenStyle, areaList, 1, dateStyle);
+        }
+        fillMainSheet(book, sheet, beginningDate, endingDate, greenStyle, redStyle, dateStyle, controlObjects);
+
+        return createFile(book);
+    }
+
+    public void fillMainSheet(XSSFWorkbook book, XSSFSheet sheet, Date beginningDate, Date endingDate, CellStyle greenStyle,
+                              CellStyle redStyle, CellStyle dateStyle, ArrayList<ControlObject> controlObjects) {
+
+        ArrayList<ControlObject> overheatingAreaList = new ArrayList<>();
+
         // список всех подконтрольных объектов
-        List<ControlObject> controlObjects = this.controlObjectRepo.findAll();
+        if (controlObjects.isEmpty()) controlObjects = (ArrayList<ControlObject>) this.controlObjectRepo.findAll();
+//        else areaList.addAll(controlObjects);
 
         // строки занимаемые выводом ячеек
         int rowSize = controlObjects.size() / 5;
         int columnSize = 5;
-
-        ArrayList<ControlObject> overheatedAreaList = new ArrayList<>();
 
         System.out.println("\nСоздание листа\n");
 
@@ -74,7 +85,7 @@ public class CreateExcelReport {
         for (int i = 0; i < rowSize + 1; i++) {
             Row row = sheet.createRow(i);
             for (int j = i * 5; j < i * 5 + columnSize; j++) {
-                if (j >= controlObjects.size()){
+                if (j >= controlObjects.size()) {
                     break;
                 }
                 numCellColumn = j - i * 5;
@@ -86,36 +97,46 @@ public class CreateExcelReport {
                 //проверка на перегретость
 //                List<Measurement> measurements = controlObject.getMeasurement();
                 if (!measurementRepo.getOverheatingMeasurement(controlObject.getId(),
-                        (Double) controlObject.getDangerTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
+                        (Double) controlObject.getDangerTemp(), beginningDate, endingDate).isEmpty())
+                    overheating = true;
                 if (!measurementRepo.getOverheatingWarningMeasurement(controlObject.getId(),
-                        (Double) controlObject.getWarningTemp(), beginningDate, endingDate).isEmpty()) overheating = true;
+                        (Double) controlObject.getWarningTemp(), beginningDate, endingDate).isEmpty())
+                    overheating = true;
 
                 if (!overheating) cell.setCellStyle(greenStyle);
                 else {
                     cell.setCellStyle(redStyle);
-                    overheatedAreaList.add(controlObject);
+                    overheatingAreaList.add(controlObject);
                 }
                 cell.setCellValue(controlObjects.get(j).getName());
             }
         }
+        areaInfo(book, sheet, beginningDate, endingDate, greenStyle, redStyle, controlObjects, overheatingAreaList, rowSize, dateStyle);
+    }
+
+    public void areaInfo(XSSFWorkbook book, XSSFSheet sheet, Date beginningDate, Date endingDate, CellStyle greenStyle,
+                         CellStyle redStyle, ArrayList<ControlObject> controlObjects, ArrayList<ControlObject> overheatingAreaList,
+                         int rowSize, CellStyle dateStyle) {
 
         System.out.println("\nВывод областей\n");
 
         Integer index = 0;
-        for (ControlObject controlObject : overheatedAreaList) {
+        for (ControlObject controlObject : controlObjects) {
+            boolean overheatingArea = overheatingAreaList.contains(controlObject);
 //            List<Measurement> measurements = controlObject.getMeasurement();
             index += 1;
-            System.out.println("Area " + index + " of " + overheatedAreaList.size());
+            System.out.println("Area " + index + " of " + controlObjects.size());
 
             // эксель лист под каждую область с температурами
-            XSSFSheet cellSheet = book.createSheet("Область #" + controlObject.getId()+ "-" + controlObject.getName() );
+            XSSFSheet cellSheet = book.createSheet("Область #" + controlObject.getId() + "-" + controlObject.getName());
 
             // название области
             Row areaRow = cellSheet.createRow(0);
             Cell areaCell = areaRow.createCell(0);
 
             areaCell.setCellValue("Область " + controlObject.getName());
-            areaCell.setCellStyle(redStyle);
+            if (overheatingArea) areaCell.setCellStyle(redStyle);
+            else areaCell.setCellStyle(greenStyle);
 
             // номера столбцов дат и значений
             int numCellDate = 0;
@@ -131,7 +152,7 @@ public class CreateExcelReport {
             Collections.sort(totalDates);
             Map<Date, Object> preparedToSendData = (Map<Date, Object>) allData.get(1);
 
-            if(preparedToSendData.isEmpty()){
+            if (preparedToSendData.isEmpty()) {
                 continue;
             }
 
@@ -140,17 +161,17 @@ public class CreateExcelReport {
             // вывод измерений на отдельный лист эксель
             Calendar cal = Calendar.getInstance();
             cal.setTime(totalDates.get(0));
-            cal.add(Calendar.MINUTE, 1);
+            cal.add(Calendar.HOUR, 1);
             Date datePlusMinute = cal.getTime();
 
             ArrayList<Date> minuteDates = new ArrayList<>();
             int rowCount = 2;
 
             for (int i = 0; i < totalDates.size(); i++) {
-                System.out.println("time: " + totalDates.get(i));
-                System.out.println(datePlusMinute);
-                if (!totalDates.get(i).before(datePlusMinute)){
-                    System.out.println("check");
+//                System.out.println("time: " + totalDates.get(i));
+//                System.out.println(datePlusMinute);
+                if (!totalDates.get(i).before(datePlusMinute)) {
+//                    System.out.println("check");
 
                     rowCount++;
                     Double weatherTemp = 0.0;
@@ -163,32 +184,32 @@ public class CreateExcelReport {
                     int weatherCount = 0;
                     int thermalCount = 0;
                     int mipCount = 0;
-                    for (int j = 0; j < minuteDates.size(); j++){
-                        if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement){
+                    for (int j = 0; j < minuteDates.size(); j++) {
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement) {
                             Double value = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-                            System.out.println("w: " + value);
+//                            System.out.println("w: " + value);
                             weatherTemp += value;
                             weatherCount++;
                             if (value >= maxWeatherTemp) maxWeatherTemp = value;
                         }
-                        if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement){
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement) {
                             Double value = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-                            System.out.println(((Measurement) preparedToSendData.get(minuteDates.get(j))).getDatetime());
-                            System.out.println("t: " + value);
+//                            System.out.println(((Measurement) preparedToSendData.get(minuteDates.get(j))).getDatetime());
+//                            System.out.println("t: " + value);
                             temp += value;
                             thermalCount++;
                             if (value >= maxTemp) maxTemp = value;
                         }
-                        if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement){
+                        if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement) {
                             String voltageMeasurementChannel = controlObject.getVoltageMeasurementChannel();
                             Double value;
-                            if (voltageMeasurementChannel.equals("A"))  value = ((MIPMeasurement)
+                            if (voltageMeasurementChannel.equals("A")) value = ((MIPMeasurement)
                                     preparedToSendData.get(minuteDates.get(j))).getPowerA();
-                            else if (voltageMeasurementChannel.equals("B"))  value = ((MIPMeasurement)
+                            else if (voltageMeasurementChannel.equals("B")) value = ((MIPMeasurement)
                                     preparedToSendData.get(minuteDates.get(j))).getPowerB();
-                            else  value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerC();
+                            else value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerC();
 
-                            System.out.println("m: " + value);
+//                            System.out.println("m: " + value);
                             mipPower += value;
                             mipCount++;
                             if (value >= maxMipPower) maxMipPower = value;
@@ -202,23 +223,23 @@ public class CreateExcelReport {
                     cellSheet.autoSizeColumn(numCellDate);
 
                     Cell cellValue = rowInf.createCell(numCellValue);
-                    if (thermalCount != 0) cellValue.setCellValue(temp/thermalCount);
+                    if (thermalCount != 0) cellValue.setCellValue(temp / thermalCount);
                     else cellValue.setBlank();
 
                     Cell cellWeather = rowInf.createCell(numCellWeather);
-                    if (weatherCount != 0) cellWeather.setCellValue(weatherTemp/weatherCount);
+                    if (weatherCount != 0) cellWeather.setCellValue(weatherTemp / weatherCount);
                     else cellWeather.setBlank();
 
                     Cell cellMip = rowInf.createCell(numCellMip);
-                    if (mipCount != 0) cellMip.setCellValue((mipPower/mipCount)/1000);
+                    if (mipCount != 0) cellMip.setCellValue((mipPower / mipCount) / 1000);
                     else cellMip.setBlank();
 
                     cal.setTime(totalDates.get(i));
-                    cal.add(Calendar.MINUTE, 1);
+                    cal.add(Calendar.HOUR, 1);
                     datePlusMinute = cal.getTime();
 
                     minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()));
-                    System.out.println(minuteDates.toString());
+//                    System.out.println(minuteDates.toString());
                 }
 
                 minuteDates.add(totalDates.get(i));
@@ -227,12 +248,13 @@ public class CreateExcelReport {
             System.out.println("\nПеред перегретыми точками\n");
 
             // информация по перегретым точкам на главном эксель листе
-            Row row = sheet.createRow(2 + rowSize + 26 * overheatedAreaList.indexOf(controlObject));
+            Row row = sheet.createRow(2 + rowSize + 26 * controlObjects.indexOf(controlObject));
             Cell cell = row.createCell(0);
-//            sheet.autoSizeColumn(0);
             cell.setCellValue("Область " + controlObject.getName());
-            cell.setCellStyle(redStyle);
-            sheet.autoSizeColumn(0);
+            double columnWeight = (cell.toString().length() * 0.44 + 2.24) * 450;
+            sheet.setColumnWidth(0, (int) columnWeight);
+            if (overheatingArea) cell.setCellStyle(redStyle);
+            else cell.setCellStyle(greenStyle);
 
             // строка с граничными температурами
             Row tempBorders = sheet.createRow(row.getRowNum() + 1);
@@ -273,9 +295,9 @@ public class CreateExcelReport {
             String info = "Время превышения температур: ";
             StringBuilder sb = new StringBuilder(info);
             ArrayList<String> uniqueDates = new ArrayList<>();
-            for (Measurement measurement: overheatingMeasurements){
+            for (Measurement measurement : overheatingMeasurements) {
                 String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(measurement.getDatetime());
-                if (!uniqueDates.contains(nowDate)){
+                if (!uniqueDates.contains(nowDate)) {
                     uniqueDates.add(nowDate);
                     sb.append(nowDate);
                     sb.append(", ");
@@ -283,15 +305,19 @@ public class CreateExcelReport {
             }
 
             // вывод информации превышения температур
-            sheet.createRow(tempBorders.getRowNum() + 22).createCell(0).setCellValue(
-                    "За выбранный период в области " + controlObject.getName() + " превышения температуры наблюдалось.");
-            sheet.createRow(tempBorders.getRowNum() + 23).createCell(0).setCellValue(sb.toString());
+            if (overheatingArea){
+                sheet.createRow(tempBorders.getRowNum() + 22).createCell(0).setCellValue(
+                        "За выбранный период в области " + controlObject.getName() + " превышения температуры наблюдалось.");
+                sheet.createRow(tempBorders.getRowNum() + 23).createCell(0).setCellValue(sb.toString());
+            }
         }
-
         System.out.println("\nОтчет закончен\n");
+    }
+
+    public String createFile(XSSFWorkbook book) throws IOException {
 
         // создание файла отчета
-        String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date()) + ".xlsx";
+        String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date()) + ".xlsx";
         FileOutputStream out = new FileOutputStream(System.getProperty("user.dir") + "/src/main/upload/static/reports/" +
                 date);
         book.write(out);

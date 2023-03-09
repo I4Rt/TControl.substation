@@ -29,6 +29,9 @@ public interface ControlObjectRepo extends JpaRepository<ControlObject, Long> {
     @Query(nativeQuery = true, value="SELECT * FROM control_object where thermal_imager_id = :ti_id")
     List<ControlObject> getControlObjectByTIID(@Param("ti_id") Long id);
 
+    @Query(nativeQuery = true, value="SELECT * FROM control_object where object_id = :id")
+    ControlObject getControlObjectById(@Param("id") int id);
+
     @Query(nativeQuery = true, value="SELECT * FROM control_object order by name ")
     List<ControlObject> getOrderedByName();
 

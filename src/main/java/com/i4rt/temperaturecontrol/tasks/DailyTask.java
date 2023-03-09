@@ -30,10 +30,10 @@ public class DailyTask {
             try{
                 File folder = new File(System.getProperty("user.dir") + "\\src\\main\\upload\\static\\imgData\\" + area);
                 SimpleDateFormat format = new SimpleDateFormat();
-                format.applyPattern("dd_MM");
+                format.applyPattern("yyyy_MM_dd");
 
                 Date docDate = format.parse(area);
-                docDate.setYear(new Date(folder.lastModified()).getYear());
+//                docDate.setYear(new Date(folder.lastModified()).getYear());
                 Date nowDate = new Date();
 
                 calendar.setTime(nowDate);
@@ -52,10 +52,13 @@ public class DailyTask {
             }
         }
 
-        File newDirectory = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + calendar.get(Calendar.DAY_OF_MONTH) +"_"+ (calendar.get(Calendar.MONTH) + 1));
+        File newDirectory = new File(System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\"
+                + Calendar.getInstance().get(Calendar.YEAR) + "_"
+                + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "_"
+                + Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
         if (!newDirectory.exists()){
             System.out.println(newDirectory.mkdirs());
-            System.out.println("dir created at " + System.getProperty("user.dir")+"\\src\\main\\upload\\static\\imgData\\" + Calendar.getInstance().get(Calendar.DAY_OF_MONTH) +"_"+ (Calendar.getInstance().get(Calendar.MONTH) + 1));
+            System.out.println("dir created at " + newDirectory.getPath());
         }
 
     }
